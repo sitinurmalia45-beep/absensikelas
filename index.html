@@ -1,0 +1,350 @@
+!DOCTYPE< html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Absensi Kelas Online (Lokal)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        .page { display: none; animation: fadeIn 0.5s ease-in-out; }
+        .page-active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-input { transition: all 0.2s ease-in-out; }
+        .form-input:focus-within { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2); }
+
+        .modal-backdrop { background-color: rgba(0,0,0,0.6); animation: fadeIn 0.3s; }
+        .modal-content { animation: slideInUp 0.4s; }
+        @keyframes slideInUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+    <!-- Container Utama -->
+    <div id="app" class="min-h-screen p-4 flex items-center justify-center bg-gradient-to-br from-blue-500 via-teal-400 to-green-500">
+
+        <!-- Halaman Login -->
+        <div id="login-page" class="page w-full max-w-md">
+            <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 space-y-6">
+                <div class="text-center">
+                    <i class="ph-duotone ph-student text-5xl text-teal-500"></i>
+                    <h1 class="text-3xl font-bold text-gray-800 dark:text-white mt-2">Selamat Datang!</h1>
+                    <p class="text-gray-500 dark:text-gray-400">Login ke Sistem Absensi</p>
+                </div>
+                <div id="login-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg"></div>
+                <div class="space-y-4">
+                    <div class="relative form-input">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="ph-user text-gray-400"></i></span>
+                        <input type="text" id="login-username" placeholder="Username" class="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-gray-700 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    </div>
+                    <div class="relative form-input">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3"><i class="ph-lock text-gray-400"></i></span>
+                        <input type="password" id="login-password" placeholder="Password" class="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-gray-700 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
+                    </div>
+                </div>
+                <button onclick="handleLogin()" class="w-full flex items-center justify-center bg-teal-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-teal-700 transition-transform duration-200 hover:scale-105 shadow-lg hover:shadow-teal-400/50">
+                    <i class="ph-sign-in mr-2"></i> Login
+                </button>
+                <p class="text-center text-sm">Belum punya akun? <a href="#" onclick="showPage('register-page')" class="text-teal-500 hover:underline">Registrasi di sini</a></p>
+                <div class="text-xs text-center text-gray-400 dark:text-gray-500 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <p class="font-bold">Akun Demo:</p>
+                    <p>Admin: <span class="font-mono">admin / admin123</span></p>
+                    <p>Guru: <span class="font-mono">guru / password</span></p>
+                    <p>Siswa: <span class="font-mono">aldebaran / admin123</span></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Halaman Registrasi -->
+        <div id="register-page" class="page w-full max-w-md">
+             <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 space-y-4">
+                <h1 class="text-2xl font-bold text-center">Registrasi Akun Baru</h1>
+                <div id="register-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg"></div>
+                <input type="email" id="register-email" placeholder="Email" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border-gray-300 rounded-lg">
+                <input type="password" id="register-password" placeholder="Password" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border-gray-300 rounded-lg">
+                <input type="text" id="register-name" placeholder="Nama Lengkap" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border-gray-300 rounded-lg">
+                <input type="text" id="register-username" placeholder="Username" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border-gray-300 rounded-lg">
+                <select id="register-role" onchange="toggleKelasSelection()" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border-gray-300 rounded-lg">
+                    <option value="siswa">Siswa</option>
+                    <option value="guru">Guru</option>
+                </select>
+                <select id="register-kelas" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border-gray-300 rounded-lg">
+                    <option value="XII-D">XII-D</option>
+                </select>
+                <button onclick="handleRegister()" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">Registrasi</button>
+                 <p class="text-center text-sm">Sudah punya akun? <a href="#" onclick="showPage('login-page')" class="text-teal-500 hover:underline">Login di sini</a></p>
+             </div>
+        </div>
+
+        <!-- Halaman Utama Aplikasi (Dashboard) -->
+        <div id="dashboard-page" class="page w-full max-w-7xl mx-auto">
+            <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-6 md:p-8">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Dashboard Absensi</h1>
+                        <p id="welcome-message" class="text-gray-500"></p>
+                    </div>
+                    <button onclick="handleLogout()" class="mt-4 md:mt-0 flex items-center bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition-transform duration-200 hover:scale-105">
+                        <i class="ph-sign-out mr-2"></i>Logout
+                    </button>
+                </div>
+                <div id="dashboard-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal untuk Tambah/Edit User -->
+    <div id="user-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md modal-content">
+            <h2 id="modal-title" class="text-2xl font-bold mb-4"></h2>
+            <div id="modal-error" class="hidden bg-red-100 text-red-700 p-3 rounded-md mb-4"></div>
+            <input type="hidden" id="modal-user-id">
+            <input type="hidden" id="modal-user-role">
+            <div class="space-y-4">
+                <input type="text" id="modal-name" placeholder="Nama Lengkap" class="w-full p-2 border rounded">
+                <input type="text" id="modal-username" placeholder="Username" class="w-full p-2 border rounded">
+                <input type="email" id="modal-email" placeholder="Email" class="w-full p-2 border rounded">
+                <input type="text" id="modal-password" placeholder="Password (biarkan kosong jika tidak diubah)" class="w-full p-2 border rounded">
+                <select id="modal-kelas" class="w-full p-2 border rounded">
+                    <option value="XII-D">XII-D</option>
+                </select>
+            </div>
+            <div class="mt-6 flex justify-end space-x-4">
+                <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-md">Batal</button>
+                <button onclick="handleSaveUser()" class="px-4 py-2 bg-teal-600 text-white rounded-md">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA LOKAL (PENGGANTI DATABASE) ---
+        let users = [ { id: 1, username: 'admin', email: 'admin@sekolah.id', password: 'admin123', nama: 'Admin Sekolah', role: 'admin', status: 'aktif' }, { id: 2, username: 'guru', email: 'guru@sekolah.id', password: 'password', nama: 'Budi Guru', role: 'guru', status: 'disetujui' }, { id: 3, username: 'aldebaran', email: 'siswa@sekolah.id', password: 'admin123', nama: 'Siswa 123', role: 'siswa', kelas: 'XII-D', status: 'aktif' }, { id: 4, username: 'anzillah', email: 'anzillah@sekolah.id', password: 'password', nama: 'Anzillah Nurcahaya', role: 'siswa', kelas: 'XII-D', status: 'aktif' }];
+        const studentNames = ['Aulia Danish', 'Chairil Ahmad Fathir', 'Daiva Bhagja Wangsapriyatman', 'Dellaluna Nur Agustina', 'Denian Prasetya', 'Fadhillah Nursyifa', 'Ghaisan Rafani', 'Hasna Fauziah Aqila', 'Heni Ramadhani', 'Iyan Apriansa', 'Keihsa Anindya Danastri H', 'Kintan Putri Haryono', 'Muhamad Fajri Bakkah', 'Muhamad Farhan', 'Muhammad Nabil Fadlurrohman', 'Muhammad Ridhan Fajari', 'Muhammad Rizqy Irza Saputra', 'Nadia Aprianca Putri', 'Naisya Aufiya Indri', 'Nasya Tri Febriyani', 'Naya Nardiana', 'Nur Maya Aini', 'Puspita Widia Kusumaningsih', 'Puteri Rosmayanti', 'Rafa Yanwardi Azhar', 'Raka Alif Al Aziz', 'Resti Julianti', 'Siti Nurmalia Ramadhan', 'Sultan Fardhan Anggestu', 'Sumayyah Dema Nazihah', 'Syafira Ramadhani', 'Syakilla Insan Sabria', 'Syifa Amelia Dalimunthe', 'Zahratunnisa'];
+        let nextUserId = 5;
+        studentNames.forEach(name => { const username = name.split(' ')[0].toLowerCase(); users.push({ id: nextUserId++, username: username, email: username + '@sekolah.id', password: 'password', nama: name, role: 'siswa', kelas: 'XII-D', status: 'aktif' }); });
+        let attendanceRecords = [ { id: 1, userId: 3, tanggal: '2025-10-01', jam: '07:30', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 2, userId: 4, tanggal: '2025-10-01', jam: '08:00', status: 'Sakit', bukti: 'https://i.ibb.co/6bs0k63/surat-sakit.png', kelas: 'XII-D' }, { id: 3, userId: 3, tanggal: '2025-09-30', jam: '07:25', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 4, userId: 4, tanggal: '2025-09-30', jam: '07:28', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 5, userId: 5, tanggal: '2025-09-30', jam: '09:00', status: 'Izin', bukti: 'https://example.com/surat-izin.jpg', kelas: 'XII-D' }, { id: 6, userId: 3, tanggal: '2025-09-29', jam: '07:20', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 7, userId: 4, tanggal: '2025-09-29', jam: '08:15', status: 'Sakit', bukti: '', kelas: 'XII-D' }];
+        let nextAttendanceId = 8;
+
+        // --- GLOBAL STATE ---
+        let currentUser = null;
+
+        // --- UI HELPER FUNCTIONS ---
+        window.showPage = (pageId) => { document.querySelectorAll('#app > div.page').forEach(div => div.classList.remove('page-active')); document.getElementById(pageId).classList.add('page-active'); };
+        window.toggleKelasSelection = (isModal = false) => { 
+            const role = isModal ? document.getElementById('modal-user-role').value : document.getElementById('register-role').value;
+            const kelasEl = isModal ? document.getElementById('modal-kelas') : document.getElementById('register-kelas');
+            kelasEl.style.display = role === 'siswa' ? 'block' : 'none'; 
+        };
+        function getTodayDateString() { const today = new Date(); const year = today.getFullYear(); const month = String(today.getMonth() + 1).padStart(2, '0'); const day = String(today.getDate()).padStart(2, '0'); return `${year}-${month}-${day}`; }
+        function getCurrentTimeString() { const now = new Date(); const hours = String(now.getHours()).padStart(2, '0'); const minutes = String(now.getMinutes()).padStart(2, '0'); return `${hours}:${minutes}`; }
+
+        // --- RENDER FUNCTIONS ---
+        function renderDashboard() {
+            if (!currentUser) return;
+            document.getElementById('welcome-message').textContent = `Selamat datang, ${currentUser.nama} | Peran: ${currentUser.role}`;
+            const contentDiv = document.getElementById('dashboard-content');
+            contentDiv.innerHTML = '';
+            switch(currentUser.role) {
+                case 'admin': contentDiv.innerHTML = renderAdminDashboard(); attachAdminEventListeners(); break;
+                case 'guru': contentDiv.innerHTML = currentUser.status !== 'disetujui' ? `<div class="bg-yellow-100 text-yellow-800 p-4 rounded-lg">Akun Anda sedang menunggu persetujuan dari admin.</div>` : renderGuruDashboard(); break;
+                case 'siswa': contentDiv.innerHTML = renderSiswaDashboard(); attachSiswaEventListeners(); break;
+            }
+        }
+        
+        function renderAdminDashboard() {
+            // Manajemen Guru
+            let teacherRows = '';
+            users.filter(u => u.role === 'guru').forEach(teacher => {
+                teacherRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td class="p-3">${teacher.nama}</td><td class="p-3">${teacher.email}</td><td class="p-3">${teacher.status}</td>
+                    <td class="p-3 space-x-2">
+                        <button onclick="openModal(${teacher.id})" class="text-blue-500 hover:underline">Edit</button>
+                        <button onclick="handleDeleteUser(${teacher.id})" class="text-red-500 hover:underline">Hapus</button>
+                        ${teacher.status !== 'disetujui' ? `<button onclick="approveTeacher(${teacher.id})" class="text-green-500 hover:underline">Setujui</button>` : ''}
+                    </td></tr>`;
+            });
+            const teacherManagementHTML = `<div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Manajemen Guru</h2>
+                <button onclick="openModal(null, 'guru')" class="bg-teal-500 text-white px-4 py-2 rounded-lg">Tambah Guru</button>
+                </div><div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700"><tr><th class="p-3 font-semibold">Nama</th><th class="p-3 font-semibold">Email</th><th class="p-3 font-semibold">Status</th><th class="p-3 font-semibold">Aksi</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${teacherRows}</tbody></table></div>`;
+            
+            // Manajemen Siswa
+            let studentRows = '';
+            users.filter(u => u.role === 'siswa').forEach(student => {
+                studentRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td class="p-3">${student.nama}</td><td class="p-3">${student.username}</td><td class="p-3">${student.kelas}</td>
+                    <td class="p-3 space-x-2">
+                        <button onclick="openModal(${student.id})" class="text-blue-500 hover:underline">Edit</button>
+                        <button onclick="handleDeleteUser(${student.id})" class="text-red-500 hover:underline">Hapus</button>
+                    </td></tr>`;
+            });
+            const studentManagementHTML = `<div class="mt-8 flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Manajemen Siswa</h2>
+                <button onclick="openModal(null, 'siswa')" class="bg-teal-500 text-white px-4 py-2 rounded-lg">Tambah Siswa</button>
+                </div><div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700"><tr><th class="p-3 font-semibold">Nama</th><th class="p-3 font-semibold">Username</th><th class="p-3 font-semibold">Kelas</th><th class="p-3 font-semibold">Aksi</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${studentRows}</tbody></table></div>`;
+
+            return teacherManagementHTML + studentManagementHTML + renderAttendanceRankings(users.filter(u => u.role === 'siswa'));
+        }
+        
+        function renderGuruDashboard() {
+            const today = getTodayDateString();
+            const studentsInClass = users.filter(u => u.role === 'siswa' && u.kelas === 'XII-D');
+            const summary = { 'Hadir': 0, 'Sakit': 0, 'Izin': 0, 'Belum Absen': 0 };
+            let studentRows = '';
+            studentsInClass.forEach(student => {
+                const attendance = attendanceRecords.find(r => r.userId === student.id && r.tanggal === today);
+                const status = attendance ? attendance.status : 'Belum Absen';
+                summary[status]++;
+                const statusStyles = { 'Hadir': 'bg-green-100 text-green-800', 'Sakit': 'bg-yellow-100 text-yellow-800', 'Izin': 'bg-blue-100 text-blue-800', 'Alfa': 'bg-red-100 text-red-800', 'Belum Absen': 'bg-gray-200 text-gray-800' };
+                studentRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-3">${student.nama}</td><td class="p-3"><span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusStyles[status]}">${status}</span></td></tr>`;
+            });
+            const todayRecapHTML = `<h2 class="text-2xl font-bold mb-4">Rekap Absensi Kelas XII-D (${today})</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-green-100 dark:bg-green-900/50 p-4 rounded-lg text-center shadow"><p class="text-3xl font-bold text-green-700 dark:text-green-300">${summary['Hadir']}</p><p class="text-sm text-green-600 dark:text-green-400">Hadir</p></div>
+                    <div class="bg-yellow-100 dark:bg-yellow-900/50 p-4 rounded-lg text-center shadow"><p class="text-3xl font-bold text-yellow-700 dark:text-yellow-300">${summary['Sakit']}</p><p class="text-sm text-yellow-600 dark:text-yellow-400">Sakit</p></div>
+                    <div class="bg-blue-100 dark:bg-blue-900/50 p-4 rounded-lg text-center shadow"><p class="text-3xl font-bold text-blue-700 dark:text-blue-300">${summary['Izin']}</p><p class="text-sm text-blue-600 dark:text-blue-400">Izin</p></div>
+                    <div class="bg-gray-200 dark:bg-gray-700/50 p-4 rounded-lg text-center shadow"><p class="text-3xl font-bold text-gray-700 dark:text-gray-300">${summary['Belum Absen']}</p><p class="text-sm text-gray-600 dark:text-gray-400">Belum Absen</p></div>
+                </div>
+                <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700"><tr><th class="p-3 font-semibold">Nama Siswa</th><th class="p-3 font-semibold">Status Hari Ini</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${studentRows}</tbody></table></div>`;
+            return todayRecapHTML + renderAttendanceRankings(studentsInClass);
+        }
+
+        function renderSiswaDashboard() {
+             const todayAttendance = attendanceRecords.find(r => r.userId === currentUser.id && r.tanggal === getTodayDateString());
+             let historyRows = '';
+             attendanceRecords.filter(r => r.userId === currentUser.id).sort((a,b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => { historyRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-2">${rec.tanggal}</td><td class="p-2">${rec.jam}</td><td class="p-2">${rec.status}</td><td class="p-2">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="flex items-center text-teal-500 hover:underline"><i class="ph-image-square mr-1"></i>Lihat Bukti</a>` : '-'}</td></tr>`; });
+            
+            let attendanceCardContent = todayAttendance ? `<div class="text-center"><i class="ph-duotone ph-check-circle text-6xl text-green-500"></i><h3 class="text-xl font-bold mt-2">Absensi Berhasil!</h3><p class="text-gray-500 dark:text-gray-400">Anda sudah absen hari ini (${todayAttendance.jam}) dengan status: <strong>${todayAttendance.status}</strong>.</p></div>` 
+            : `<p class="mb-4 font-semibold">Anda belum absen hari ini.</p><div class="space-y-4"><select id="status-absen" class="w-full p-2 border rounded-md bg-white dark:bg-gray-800"><option>Hadir</option><option>Izin</option><option>Sakit</option></select><div><p class="text-xs text-gray-500 mb-1">Butuh link untuk bukti? Unggah foto di sini:</p><a href="https://imgbb.com/" target="_blank" class="w-full flex items-center justify-center text-sm bg-gray-200 dark:bg-gray-600 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"><i class="ph-upload-simple mr-2"></i> Unggah ke ImgBB.com</a></div><input type="text" id="bukti-absen" placeholder="Tempel Link Foto Bukti di sini" class="w-full p-2 border rounded-md bg-white dark:bg-gray-800"><button id="submit-absen-btn" class="w-full bg-teal-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-teal-700">Kirim Absen</button></div>`;
+            
+            return `<div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h2 class="flex items-center text-2xl font-bold mb-4"><i class="ph-calendar-check mr-3 text-teal-400"></i>Absensi Hari Ini</h2><div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow">${attendanceCardContent}</div></div><div><h2 class="flex items-center text-2xl font-bold mb-4"><i class="ph-list-checks mr-3 text-teal-400"></i>Riwayat Absensi Anda</h2><div class="overflow-y-auto max-h-96 bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700 sticky top-0"><tr><th class="p-2 font-semibold">Tanggal</th><th class="p-2 font-semibold">Jam</th><th class="p-2 font-semibold">Status</th><th class="p-2 font-semibold">Bukti</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${historyRows}</tbody></table></div></div></div>`;
+        }
+
+        function renderAttendanceRankings(studentList) {
+            let rankings = studentList.map(student => {
+                const studentRecords = attendanceRecords.filter(r => r.userId === student.id);
+                const hadirCount = studentRecords.filter(r => r.status === 'Hadir').length;
+                const totalRecords = studentRecords.length;
+                const percentage = totalRecords > 0 ? Math.round((hadirCount / totalRecords) * 100) : 0;
+                return { name: student.nama, percentage };
+            }).sort((a, b) => b.percentage - a.percentage);
+
+            let rankHTML = '';
+            rankings.forEach(rank => {
+                rankHTML += `<div class="mb-2"><div class="flex justify-between mb-1"><span class="text-base font-medium">${rank.name}</span><span class="text-sm font-medium">${rank.percentage}% Hadir</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-teal-500 h-2.5 rounded-full" style="width: ${rank.percentage}%"></div></div></div>`;
+            });
+            
+            return `<div class="mt-8"><h2 class="text-2xl font-bold mb-4">Diagram Peringkat Kehadiran Siswa</h2><div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">${rankHTML}</div></div>`;
+        }
+        
+        function attachAdminEventListeners() { /* No longer needed with inline onclick */ }
+        function attachSiswaEventListeners() { const submitBtn = document.getElementById('submit-absen-btn'); if(submitBtn) submitBtn.addEventListener('click', handleAbsenSiswa); }
+
+        // --- CRUD & MODAL FUNCTIONS ---
+        function openModal(userId = null, role = 'siswa') {
+            const modal = document.getElementById('user-modal');
+            const title = document.getElementById('modal-title');
+            const idInput = document.getElementById('modal-user-id');
+            const roleInput = document.getElementById('modal-user-role');
+            document.getElementById('modal-error').classList.add('hidden');
+            document.getElementById('modal-password').value = '';
+            
+            if (userId) { // Edit mode
+                const user = users.find(u => u.id === userId);
+                title.textContent = `Edit Pengguna: ${user.nama}`;
+                idInput.value = user.id;
+                roleInput.value = user.role;
+                document.getElementById('modal-name').value = user.nama;
+                document.getElementById('modal-username').value = user.username;
+                document.getElementById('modal-email').value = user.email;
+                document.getElementById('modal-kelas').value = user.kelas || 'XII-D';
+            } else { // Add mode
+                title.textContent = `Tambah ${role === 'siswa' ? 'Siswa' : 'Guru'} Baru`;
+                idInput.value = '';
+                roleInput.value = role;
+                document.getElementById('modal-name').value = '';
+                document.getElementById('modal-username').value = '';
+                document.getElementById('modal-email').value = '';
+                document.getElementById('modal-kelas').value = 'XII-D';
+            }
+            toggleKelasSelection(true);
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() { document.getElementById('user-modal').classList.add('hidden'); }
+
+        function handleSaveUser() {
+            const id = document.getElementById('modal-user-id').value;
+            const role = document.getElementById('modal-user-role').value;
+            const name = document.getElementById('modal-name').value;
+            const username = document.getElementById('modal-username').value;
+            const email = document.getElementById('modal-email').value;
+            const password = document.getElementById('modal-password').value;
+            const kelas = document.getElementById('modal-kelas').value;
+            const errorDiv = document.getElementById('modal-error');
+
+            if (!name || !username || !email) { errorDiv.textContent = "Nama, Username, dan Email wajib diisi."; errorDiv.classList.remove('hidden'); return; }
+
+            const existingUser = users.find(u => (u.username === username || u.email === email) && u.id != id);
+            if (existingUser) { errorDiv.textContent = "Username atau Email sudah digunakan."; errorDiv.classList.remove('hidden'); return; }
+
+            if (id) { // Update existing user
+                const userIndex = users.findIndex(u => u.id == id);
+                users[userIndex] = { ...users[userIndex], nama: name, username, email, ...(role === 'siswa' && { kelas }) };
+                if (password) users[userIndex].password = password;
+            } else { // Add new user
+                if (!password) { errorDiv.textContent = "Password wajib diisi untuk pengguna baru."; errorDiv.classList.remove('hidden'); return; }
+                const newUser = { id: nextUserId++, nama: name, username, email, password, role, status: role === 'guru' ? 'menunggu persetujuan' : 'aktif', ...(role === 'siswa' && { kelas }) };
+                users.push(newUser);
+            }
+            closeModal();
+            renderDashboard();
+        }
+
+        function handleDeleteUser(userId) {
+            if (window.confirm('Apakah Anda yakin ingin menghapus pengguna ini? Aksi ini tidak dapat dibatalkan.')) {
+                users = users.filter(u => u.id !== userId);
+                attendanceRecords = attendanceRecords.filter(r => r.userId !== userId);
+                renderDashboard();
+            }
+        }
+
+        // --- AUTH & OTHER ACTIONS ---
+        window.handleRegister = () => {
+            const email = document.getElementById('register-email').value, password = document.getElementById('register-password').value, nama = document.getElementById('register-name').value, username = document.getElementById('register-username').value, role = document.getElementById('register-role').value, kelas = document.getElementById('register-kelas').value, registerError = document.getElementById('register-error');
+            if (!email || !password || !nama || !username) { registerError.textContent = "Mohon isi semua field."; registerError.classList.remove('hidden'); return; }
+            if (users.find(u => u.email === email || u.username === username)) { registerError.textContent = "Email atau Username sudah terdaftar."; registerError.classList.remove('hidden'); return; }
+            const newUser = { id: nextUserId++, username, email, password, nama, role, status: role === 'guru' ? 'menunggu persetujuan' : 'aktif', ...(role === 'siswa' && { kelas }) };
+            users.push(newUser); alert('Registrasi berhasil! Akun ini hanya aktif selama sesi ini. Silakan login.'); registerError.classList.add('hidden'); showPage('login-page');
+        };
+        window.handleLogin = () => {
+            const username = document.getElementById('login-username').value, password = document.getElementById('login-password').value, loginError = document.getElementById('login-error');
+            const user = users.find(u => u.username === username && u.password === password);
+            if (user) { currentUser = user; loginError.classList.add('hidden'); showPage('dashboard-page'); renderDashboard(); } else { loginError.textContent = "Username atau password salah."; loginError.classList.remove('hidden'); }
+        };
+        window.handleLogout = () => { currentUser = null; showPage('login-page'); };
+        function approveTeacher(uid) { const userIndex = users.findIndex(u => u.id === uid); if (userIndex > -1) { users[userIndex].status = 'disetujui'; renderDashboard(); } }
+        function handleAbsenSiswa() {
+            const status = document.getElementById('status-absen').value, bukti = document.getElementById('bukti-absen').value;
+            if ((status === 'Izin' || status === 'Sakit') && !bukti) { alert('Mohon sertakan link bukti untuk status Izin atau Sakit.'); return; }
+            attendanceRecords.push({ id: nextAttendanceId++, userId: currentUser.id, tanggal: getTodayDateString(), jam: getCurrentTimeString(), status, bukti, kelas: currentUser.kelas });
+            alert('Absensi berhasil disimpan!');
+            renderDashboard();
+        }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => { showPage('login-page'); });
+    </script>
+</body>
+</html>
