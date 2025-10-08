@@ -1,4 +1,4 @@
-!DOCTYPE< html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -61,7 +61,7 @@
                     <p class="font-bold">Akun Demo:</p>
                     <p>Admin: <span class="font-mono">admin / admin123</span></p>
                     <p>Guru: <span class="font-mono">guru / password</span></p>
-                    <p>Siswa: <span class="font-mono">aldebaran / admin123</span></p>
+                    <p>Siswa: <span class="font-mono">aldebaran / 1</span></p>
                 </div>
             </div>
         </div>
@@ -129,15 +129,63 @@
 
     <script>
         // --- DATA LOKAL (PENGGANTI DATABASE) ---
-        let users = [ { id: 1, username: 'admin', email: 'admin@sekolah.id', password: 'admin123', nama: 'Admin Sekolah', role: 'admin', status: 'aktif' }, { id: 2, username: 'guru', email: 'guru@sekolah.id', password: 'password', nama: 'Budi Guru', role: 'guru', status: 'disetujui' }, { id: 3, username: 'aldebaran', email: 'siswa@sekolah.id', password: 'admin123', nama: 'Siswa 123', role: 'siswa', kelas: 'XII-D', status: 'aktif' }, { id: 4, username: 'anzillah', email: 'anzillah@sekolah.id', password: 'password', nama: 'Anzillah Nurcahaya', role: 'siswa', kelas: 'XII-D', status: 'aktif' }];
+        let users, attendanceRecords, teacherAttendanceRecords, nextUserId, nextAttendanceId, nextTeacherAttendanceId;
+        
+        const defaultUsers = [ 
+            { id: 1, username: 'admin', email: 'admin@sekolah.id', password: 'admin123', nama: 'Admin Sekolah', role: 'admin', status: 'aktif' }, 
+            { id: 2, username: 'guru', email: 'guru@sekolah.id', password: 'password', nama: 'Budi Guru', role: 'guru', status: 'disetujui' },
+            { id: 3, username: 'hanna', email: 'hanna@sekolah.id', password: 'password', nama: 'Bu Hanna', role: 'guru', status: 'menunggu persetujuan' },
+            { id: 4, username: 'dodi', email: 'dodi@sekolah.id', password: 'password', nama: 'Pak Dodi', role: 'guru', status: 'menunggu persetujuan' },
+            { id: 5, username: 'aldebaran', email: 'siswa@sekolah.id', password: '1', nama: 'Aldebaran Adam Syahputra', role: 'siswa', kelas: 'XII-D', status: 'aktif' }, 
+            { id: 6, username: 'anzillah', email: 'anzillah@sekolah.id', password: '2', nama: 'Anzillah Nurcahaya', role: 'siswa', kelas: 'XII-D', status: 'aktif' }
+        ];
         const studentNames = ['Aulia Danish', 'Chairil Ahmad Fathir', 'Daiva Bhagja Wangsapriyatman', 'Dellaluna Nur Agustina', 'Denian Prasetya', 'Fadhillah Nursyifa', 'Ghaisan Rafani', 'Hasna Fauziah Aqila', 'Heni Ramadhani', 'Iyan Apriansa', 'Keihsa Anindya Danastri H', 'Kintan Putri Haryono', 'Muhamad Fajri Bakkah', 'Muhamad Farhan', 'Muhammad Nabil Fadlurrohman', 'Muhammad Ridhan Fajari', 'Muhammad Rizqy Irza Saputra', 'Nadia Aprianca Putri', 'Naisya Aufiya Indri', 'Nasya Tri Febriyani', 'Naya Nardiana', 'Nur Maya Aini', 'Puspita Widia Kusumaningsih', 'Puteri Rosmayanti', 'Rafa Yanwardi Azhar', 'Raka Alif Al Aziz', 'Resti Julianti', 'Siti Nurmalia Ramadhan', 'Sultan Fardhan Anggestu', 'Sumayyah Dema Nazihah', 'Syafira Ramadhani', 'Syakilla Insan Sabria', 'Syifa Amelia Dalimunthe', 'Zahratunnisa'];
-        let nextUserId = 5;
-        studentNames.forEach(name => { const username = name.split(' ')[0].toLowerCase(); users.push({ id: nextUserId++, username: username, email: username + '@sekolah.id', password: 'password', nama: name, role: 'siswa', kelas: 'XII-D', status: 'aktif' }); });
-        let attendanceRecords = [ { id: 1, userId: 3, tanggal: '2025-10-01', jam: '07:30', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 2, userId: 4, tanggal: '2025-10-01', jam: '08:00', status: 'Sakit', bukti: 'https://i.ibb.co/6bs0k63/surat-sakit.png', kelas: 'XII-D' }, { id: 3, userId: 3, tanggal: '2025-09-30', jam: '07:25', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 4, userId: 4, tanggal: '2025-09-30', jam: '07:28', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 5, userId: 5, tanggal: '2025-09-30', jam: '09:00', status: 'Izin', bukti: 'https://example.com/surat-izin.jpg', kelas: 'XII-D' }, { id: 6, userId: 3, tanggal: '2025-09-29', jam: '07:20', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 7, userId: 4, tanggal: '2025-09-29', jam: '08:15', status: 'Sakit', bukti: '', kelas: 'XII-D' }];
-        let nextAttendanceId = 8;
-
+        let tempNextUserId = 7;
+        studentNames.forEach((name, index) => {
+            const nameParts = name.split(' ');
+            let username;
+            if ((nameParts[0].toLowerCase() === 'muhammad' || nameParts[0].toLowerCase() === 'muhamad') && nameParts.length > 1) {
+                username = nameParts[1].toLowerCase();
+            } else {
+                username = nameParts[0].toLowerCase();
+            }
+            defaultUsers.push({ id: tempNextUserId++, username: username, email: username + '@sekolah.id', password: (index + 3).toString(), nama: name, role: 'siswa', kelas: 'XII-D', status: 'aktif' });
+        });
+        const defaultAttendanceRecords = [ { id: 1, userId: 5, tanggal: '2025-10-01', jam: '07:30', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 2, userId: 6, tanggal: '2025-10-01', jam: '08:00', status: 'Sakit', bukti: 'https://i.ibb.co/6bs0k63/surat-sakit.png', kelas: 'XII-D' }, { id: 3, userId: 5, tanggal: '2025-09-30', jam: '07:25', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 4, userId: 6, tanggal: '2025-09-30', jam: '07:28', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 5, userId: 7, tanggal: '2025-09-30', jam: '09:00', status: 'Izin', bukti: 'https://example.com/surat-izin.jpg', kelas: 'XII-D' }, { id: 6, userId: 5, tanggal: '2025-09-29', jam: '07:20', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 7, userId: 6, tanggal: '2025-09-29', jam: '08:15', status: 'Sakit', bukti: '', kelas: 'XII-D' }];
+        const defaultTeacherAttendanceRecords = [{ id: 1, userId: 2, tanggal: '2025-10-01', jam: '07:05', status: 'Hadir', bukti: '' }];
+        
         // --- GLOBAL STATE ---
         let currentUser = null;
+
+        // --- LOCAL STORAGE FUNCTIONS ---
+        function saveData() {
+            localStorage.setItem('absensi_users', JSON.stringify(users));
+            localStorage.setItem('absensi_records', JSON.stringify(attendanceRecords));
+            localStorage.setItem('absensi_teacher_records', JSON.stringify(teacherAttendanceRecords));
+            localStorage.setItem('absensi_nextUserId', nextUserId);
+            localStorage.setItem('absensi_nextAttendanceId', nextAttendanceId);
+            localStorage.setItem('absensi_nextTeacherAttendanceId', nextTeacherAttendanceId);
+        }
+
+        function loadData() {
+            const storedUsers = localStorage.getItem('absensi_users');
+            if (storedUsers) {
+                users = JSON.parse(storedUsers);
+                attendanceRecords = JSON.parse(localStorage.getItem('absensi_records'));
+                teacherAttendanceRecords = JSON.parse(localStorage.getItem('absensi_teacher_records'));
+                nextUserId = parseInt(localStorage.getItem('absensi_nextUserId'));
+                nextAttendanceId = parseInt(localStorage.getItem('absensi_nextAttendanceId'));
+                nextTeacherAttendanceId = parseInt(localStorage.getItem('absensi_nextTeacherAttendanceId'));
+            } else {
+                users = defaultUsers;
+                attendanceRecords = defaultAttendanceRecords;
+                teacherAttendanceRecords = defaultTeacherAttendanceRecords;
+                nextUserId = tempNextUserId;
+                nextAttendanceId = 8;
+                nextTeacherAttendanceId = 2;
+                saveData();
+            }
+        }
 
         // --- UI HELPER FUNCTIONS ---
         window.showPage = (pageId) => { document.querySelectorAll('#app > div.page').forEach(div => div.classList.remove('page-active')); document.getElementById(pageId).classList.add('page-active'); };
@@ -156,49 +204,46 @@
             const contentDiv = document.getElementById('dashboard-content');
             contentDiv.innerHTML = '';
             switch(currentUser.role) {
-                case 'admin': contentDiv.innerHTML = renderAdminDashboard(); attachAdminEventListeners(); break;
-                case 'guru': contentDiv.innerHTML = currentUser.status !== 'disetujui' ? `<div class="bg-yellow-100 text-yellow-800 p-4 rounded-lg">Akun Anda sedang menunggu persetujuan dari admin.</div>` : renderGuruDashboard(); break;
+                case 'admin': contentDiv.innerHTML = renderAdminDashboard(); break;
+                case 'guru': contentDiv.innerHTML = currentUser.status !== 'disetujui' ? `<div class="bg-yellow-100 text-yellow-800 p-4 rounded-lg">Akun Anda sedang menunggu persetujuan dari admin.</div>` : renderGuruDashboard(); attachGuruEventListeners(); break;
                 case 'siswa': contentDiv.innerHTML = renderSiswaDashboard(); attachSiswaEventListeners(); break;
             }
         }
         
         function renderAdminDashboard() {
-            // Manajemen Guru
+            const imageHTML = `<div class="mb-6"><img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=1470&auto=format&fit=crop" alt="Ilustrasi belajar mengajar" class="w-full h-48 object-cover rounded-lg shadow-md"></div>`;
             let teacherRows = '';
             users.filter(u => u.role === 'guru').forEach(teacher => {
-                teacherRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="p-3">${teacher.nama}</td><td class="p-3">${teacher.email}</td><td class="p-3">${teacher.status}</td>
-                    <td class="p-3 space-x-2">
-                        <button onclick="openModal(${teacher.id})" class="text-blue-500 hover:underline">Edit</button>
-                        <button onclick="handleDeleteUser(${teacher.id})" class="text-red-500 hover:underline">Hapus</button>
-                        ${teacher.status !== 'disetujui' ? `<button onclick="approveTeacher(${teacher.id})" class="text-green-500 hover:underline">Setujui</button>` : ''}
-                    </td></tr>`;
+                teacherRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-3">${teacher.nama}</td><td class="p-3">${teacher.email}</td><td class="p-3">${teacher.status}</td><td class="p-3 space-x-2"><button onclick="openModal(${teacher.id})" class="text-blue-500 hover:underline">Edit</button><button onclick="handleDeleteUser(${teacher.id})" class="text-red-500 hover:underline">Hapus</button>${teacher.status !== 'disetujui' ? `<button onclick="approveTeacher(${teacher.id})" class="text-green-500 hover:underline">Setujui</button>` : ''}</td></tr>`;
             });
-            const teacherManagementHTML = `<div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold">Manajemen Guru</h2>
-                <button onclick="openModal(null, 'guru')" class="bg-teal-500 text-white px-4 py-2 rounded-lg">Tambah Guru</button>
-                </div><div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700"><tr><th class="p-3 font-semibold">Nama</th><th class="p-3 font-semibold">Email</th><th class="p-3 font-semibold">Status</th><th class="p-3 font-semibold">Aksi</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${teacherRows}</tbody></table></div>`;
+            const teacherManagementHTML = `<div class="flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Manajemen Guru</h2><button onclick="openModal(null, 'guru')" class="bg-teal-500 text-white px-4 py-2 rounded-lg">Tambah Guru</button></div><div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700"><tr><th class="p-3 font-semibold">Nama</th><th class="p-3 font-semibold">Email</th><th class="p-3 font-semibold">Status</th><th class="p-3 font-semibold">Aksi</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${teacherRows}</tbody></table></div>`;
             
-            // Manajemen Siswa
             let studentRows = '';
             users.filter(u => u.role === 'siswa').forEach(student => {
-                studentRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="p-3">${student.nama}</td><td class="p-3">${student.username}</td><td class="p-3">${student.kelas}</td>
-                    <td class="p-3 space-x-2">
-                        <button onclick="openModal(${student.id})" class="text-blue-500 hover:underline">Edit</button>
-                        <button onclick="handleDeleteUser(${student.id})" class="text-red-500 hover:underline">Hapus</button>
-                    </td></tr>`;
+                studentRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-3">${student.nama}</td><td class="p-3">${student.username}</td><td class="p-3">${student.kelas}</td><td class="p-3 space-x-2"><button onclick="openModal(${student.id})" class="text-blue-500 hover:underline">Edit</button><button onclick="handleDeleteUser(${student.id})" class="text-red-500 hover:underline">Hapus</button></td></tr>`;
             });
-            const studentManagementHTML = `<div class="mt-8 flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold">Manajemen Siswa</h2>
-                <button onclick="openModal(null, 'siswa')" class="bg-teal-500 text-white px-4 py-2 rounded-lg">Tambah Siswa</button>
-                </div><div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700"><tr><th class="p-3 font-semibold">Nama</th><th class="p-3 font-semibold">Username</th><th class="p-3 font-semibold">Kelas</th><th class="p-3 font-semibold">Aksi</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${studentRows}</tbody></table></div>`;
+            const studentManagementHTML = `<div class="mt-8 flex justify-between items-center mb-4"><h2 class="text-2xl font-bold">Manajemen Siswa</h2><button onclick="openModal(null, 'siswa')" class="bg-teal-500 text-white px-4 py-2 rounded-lg">Tambah Siswa</button></div><div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700"><tr><th class="p-3 font-semibold">Nama</th><th class="p-3 font-semibold">Username</th><th class="p-3 font-semibold">Kelas</th><th class="p-3 font-semibold">Aksi</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${studentRows}</tbody></table></div>`;
 
-            return teacherManagementHTML + studentManagementHTML + renderAttendanceRankings(users.filter(u => u.role === 'siswa'));
+            let teacherAttendanceRows = '';
+            teacherAttendanceRecords.sort((a, b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => {
+                const teacher = users.find(u => u.id === rec.userId);
+                if (teacher) { teacherAttendanceRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-3">${teacher.nama}</td><td class="p-3">${rec.tanggal}</td><td class="p-3">${rec.jam}</td><td class="p-3">${rec.status}</td><td class="p-3">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="flex items-center text-teal-500 hover:underline"><i class="ph-image-square mr-1"></i>Lihat Bukti</a>` : '-'}</td></tr>`; }
+            });
+            const teacherAttendanceHTML = `<div class="mt-8"><h2 class="text-2xl font-bold mb-4">Rekap Absensi Seluruh Guru</h2><div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700"><tr><th class="p-3 font-semibold">Nama Guru</th><th class="p-3 font-semibold">Tanggal</th><th class="p-3 font-semibold">Jam</th><th class="p-3 font-semibold">Status</th><th class="p-3 font-semibold">Bukti</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${teacherAttendanceRows}</tbody></table></div></div>`;
+            
+            return imageHTML + teacherManagementHTML + studentManagementHTML + teacherAttendanceHTML + renderAttendanceRankings(users.filter(u => u.role === 'siswa'));
         }
         
         function renderGuruDashboard() {
+            const imageHTML = `<div class="mb-6"><img src="https://images.unsplash.com/photo-1588075592446-265fd1e6e76f?q=80&w=1472&auto=format&fit=crop" alt="Ilustrasi guru mengajar" class="w-full h-48 object-cover rounded-lg shadow-md"></div>`;
             const today = getTodayDateString();
+            const todayAttendance = teacherAttendanceRecords.find(r => r.userId === currentUser.id && r.tanggal === today);
+            let historyRows = '';
+            teacherAttendanceRecords.filter(r => r.userId === currentUser.id).sort((a,b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => { historyRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-2">${rec.tanggal}</td><td class="p-2">${rec.jam}</td><td class="p-2">${rec.status}</td><td class="p-2">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="flex items-center text-teal-500 hover:underline"><i class="ph-image-square mr-1"></i>Lihat Bukti</a>` : '-'}</td></tr>`; });
+            let attendanceCardContent = todayAttendance ? `<div class="text-center"><i class="ph-duotone ph-check-circle text-6xl text-green-500"></i><h3 class="text-xl font-bold mt-2">Absensi Berhasil!</h3><p class="text-gray-500 dark:text-gray-400">Anda sudah absen hari ini (${todayAttendance.jam}) dengan status: <strong>${todayAttendance.status}</strong>.</p></div>` 
+            : `<p class="mb-4 font-semibold">Anda belum absen hari ini.</p><div class="space-y-4"><select id="status-absen-guru" class="w-full p-2 border rounded-md bg-white dark:bg-gray-800"><option>Hadir</option><option>Izin</option><option>Sakit</option></select><div><p class="text-xs text-gray-500 mb-1">Butuh link untuk bukti? Unggah foto di sini:</p><a href="https://imgbb.com/" target="_blank" class="w-full flex items-center justify-center text-sm bg-gray-200 dark:bg-gray-600 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"><i class="ph-upload-simple mr-2"></i> Unggah ke ImgBB.com</a></div><input type="text" id="bukti-absen-guru" placeholder="Tempel Link Foto Bukti di sini" class="w-full p-2 border rounded-md bg-white dark:bg-gray-800"><button id="submit-absen-guru-btn" class="w-full bg-teal-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-teal-700">Kirim Absen</button></div>`;
+            const teacherAttendanceHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="col-span-1 md:col-span-2"><hr class="my-8 border-t-2 border-gray-200 dark:border-gray-700"></div><div><h2 class="flex items-center text-2xl font-bold mb-4"><i class="ph-chalkboard-teacher mr-3 text-teal-400"></i>Absensi Anda Hari Ini</h2><div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow">${attendanceCardContent}</div></div><div><h2 class="flex items-center text-2xl font-bold mb-4"><i class="ph-list-dashes mr-3 text-teal-400"></i>Riwayat Absensi Anda</h2><div class="overflow-y-auto max-h-96 bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700 sticky top-0"><tr><th class="p-2 font-semibold">Tanggal</th><th class="p-2 font-semibold">Jam</th><th class="p-2 font-semibold">Status</th><th class="p-2 font-semibold">Bukti</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${historyRows}</tbody></table></div></div><div class="col-span-1 md:col-span-2"><hr class="my-8 border-t-2 border-gray-200 dark:border-gray-700"></div></div>`;
+            
             const studentsInClass = users.filter(u => u.role === 'siswa' && u.kelas === 'XII-D');
             const summary = { 'Hadir': 0, 'Sakit': 0, 'Izin': 0, 'Belum Absen': 0 };
             let studentRows = '';
@@ -209,26 +254,18 @@
                 const statusStyles = { 'Hadir': 'bg-green-100 text-green-800', 'Sakit': 'bg-yellow-100 text-yellow-800', 'Izin': 'bg-blue-100 text-blue-800', 'Alfa': 'bg-red-100 text-red-800', 'Belum Absen': 'bg-gray-200 text-gray-800' };
                 studentRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-3">${student.nama}</td><td class="p-3"><span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusStyles[status]}">${status}</span></td></tr>`;
             });
-            const todayRecapHTML = `<h2 class="text-2xl font-bold mb-4">Rekap Absensi Kelas XII-D (${today})</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-green-100 dark:bg-green-900/50 p-4 rounded-lg text-center shadow"><p class="text-3xl font-bold text-green-700 dark:text-green-300">${summary['Hadir']}</p><p class="text-sm text-green-600 dark:text-green-400">Hadir</p></div>
-                    <div class="bg-yellow-100 dark:bg-yellow-900/50 p-4 rounded-lg text-center shadow"><p class="text-3xl font-bold text-yellow-700 dark:text-yellow-300">${summary['Sakit']}</p><p class="text-sm text-yellow-600 dark:text-yellow-400">Sakit</p></div>
-                    <div class="bg-blue-100 dark:bg-blue-900/50 p-4 rounded-lg text-center shadow"><p class="text-3xl font-bold text-blue-700 dark:text-blue-300">${summary['Izin']}</p><p class="text-sm text-blue-600 dark:text-blue-400">Izin</p></div>
-                    <div class="bg-gray-200 dark:bg-gray-700/50 p-4 rounded-lg text-center shadow"><p class="text-3xl font-bold text-gray-700 dark:text-gray-300">${summary['Belum Absen']}</p><p class="text-sm text-gray-600 dark:text-gray-400">Belum Absen</p></div>
-                </div>
-                <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700"><tr><th class="p-3 font-semibold">Nama Siswa</th><th class="p-3 font-semibold">Status Hari Ini</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${studentRows}</tbody></table></div>`;
-            return todayRecapHTML + renderAttendanceRankings(studentsInClass);
+            const todayRecapHTML = `<h2 class="text-2xl font-bold mb-4">Rekap Absensi Siswa Kelas XII-D (${today})</h2><div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"><div class="bg-green-100 dark:bg-green-900/50 p-4 rounded-lg text-center shadow"><p class="text-3xl font-bold text-green-700 dark:text-green-300">${summary['Hadir']}</p><p class="text-sm text-green-600 dark:text-green-400">Hadir</p></div><div class="bg-yellow-100 dark:bg-yellow-900/50 p-4 rounded-lg text-center shadow"><p class="text-3xl font-bold text-yellow-700 dark:text-yellow-300">${summary['Sakit']}</p><p class="text-sm text-yellow-600 dark:text-yellow-400">Sakit</p></div><div class="bg-blue-100 dark:bg-blue-900/50 p-4 rounded-lg text-center shadow"><p class="text-3xl font-bold text-blue-700 dark:text-blue-300">${summary['Izin']}</p><p class="text-sm text-blue-600 dark:text-blue-400">Izin</p></div><div class="bg-gray-200 dark:bg-gray-700/50 p-4 rounded-lg text-center shadow"><p class="text-3xl font-bold text-gray-700 dark:text-gray-300">${summary['Belum Absen']}</p><p class="text-sm text-gray-600 dark:text-gray-400">Belum Absen</p></div></div><div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700"><tr><th class="p-3 font-semibold">Nama Siswa</th><th class="p-3 font-semibold">Status Hari Ini</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${studentRows}</tbody></table></div>`;
+            return imageHTML + teacherAttendanceHTML + todayRecapHTML + renderAttendanceRankings(studentsInClass);
         }
 
         function renderSiswaDashboard() {
+             const imageHTML = `<div class="mb-6"><img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1532&auto=format&fit=crop" alt="Ilustrasi siswa belajar" class="w-full h-48 object-cover rounded-lg shadow-md"></div>`;
              const todayAttendance = attendanceRecords.find(r => r.userId === currentUser.id && r.tanggal === getTodayDateString());
              let historyRows = '';
              attendanceRecords.filter(r => r.userId === currentUser.id).sort((a,b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => { historyRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-2">${rec.tanggal}</td><td class="p-2">${rec.jam}</td><td class="p-2">${rec.status}</td><td class="p-2">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="flex items-center text-teal-500 hover:underline"><i class="ph-image-square mr-1"></i>Lihat Bukti</a>` : '-'}</td></tr>`; });
-            
             let attendanceCardContent = todayAttendance ? `<div class="text-center"><i class="ph-duotone ph-check-circle text-6xl text-green-500"></i><h3 class="text-xl font-bold mt-2">Absensi Berhasil!</h3><p class="text-gray-500 dark:text-gray-400">Anda sudah absen hari ini (${todayAttendance.jam}) dengan status: <strong>${todayAttendance.status}</strong>.</p></div>` 
             : `<p class="mb-4 font-semibold">Anda belum absen hari ini.</p><div class="space-y-4"><select id="status-absen" class="w-full p-2 border rounded-md bg-white dark:bg-gray-800"><option>Hadir</option><option>Izin</option><option>Sakit</option></select><div><p class="text-xs text-gray-500 mb-1">Butuh link untuk bukti? Unggah foto di sini:</p><a href="https://imgbb.com/" target="_blank" class="w-full flex items-center justify-center text-sm bg-gray-200 dark:bg-gray-600 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"><i class="ph-upload-simple mr-2"></i> Unggah ke ImgBB.com</a></div><input type="text" id="bukti-absen" placeholder="Tempel Link Foto Bukti di sini" class="w-full p-2 border rounded-md bg-white dark:bg-gray-800"><button id="submit-absen-btn" class="w-full bg-teal-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-teal-700">Kirim Absen</button></div>`;
-            
-            return `<div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h2 class="flex items-center text-2xl font-bold mb-4"><i class="ph-calendar-check mr-3 text-teal-400"></i>Absensi Hari Ini</h2><div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow">${attendanceCardContent}</div></div><div><h2 class="flex items-center text-2xl font-bold mb-4"><i class="ph-list-checks mr-3 text-teal-400"></i>Riwayat Absensi Anda</h2><div class="overflow-y-auto max-h-96 bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700 sticky top-0"><tr><th class="p-2 font-semibold">Tanggal</th><th class="p-2 font-semibold">Jam</th><th class="p-2 font-semibold">Status</th><th class="p-2 font-semibold">Bukti</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${historyRows}</tbody></table></div></div></div>`;
+            return imageHTML + `<div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h2 class="flex items-center text-2xl font-bold mb-4"><i class="ph-calendar-check mr-3 text-teal-400"></i>Absensi Hari Ini</h2><div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow">${attendanceCardContent}</div></div><div><h2 class="flex items-center text-2xl font-bold mb-4"><i class="ph-list-checks mr-3 text-teal-400"></i>Riwayat Absensi Anda</h2><div class="overflow-y-auto max-h-96 bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700 sticky top-0"><tr><th class="p-2 font-semibold">Tanggal</th><th class="p-2 font-semibold">Jam</th><th class="p-2 font-semibold">Status</th><th class="p-2 font-semibold">Bukti</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${historyRows}</tbody></table></div></div></div>`;
         }
 
         function renderAttendanceRankings(studentList) {
@@ -239,17 +276,13 @@
                 const percentage = totalRecords > 0 ? Math.round((hadirCount / totalRecords) * 100) : 0;
                 return { name: student.nama, percentage };
             }).sort((a, b) => b.percentage - a.percentage);
-
             let rankHTML = '';
-            rankings.forEach(rank => {
-                rankHTML += `<div class="mb-2"><div class="flex justify-between mb-1"><span class="text-base font-medium">${rank.name}</span><span class="text-sm font-medium">${rank.percentage}% Hadir</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-teal-500 h-2.5 rounded-full" style="width: ${rank.percentage}%"></div></div></div>`;
-            });
-            
+            rankings.forEach(rank => { rankHTML += `<div class="mb-2"><div class="flex justify-between mb-1"><span class="text-base font-medium">${rank.name}</span><span class="text-sm font-medium">${rank.percentage}% Hadir</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-teal-500 h-2.5 rounded-full" style="width: ${rank.percentage}%"></div></div></div>`; });
             return `<div class="mt-8"><h2 class="text-2xl font-bold mb-4">Diagram Peringkat Kehadiran Siswa</h2><div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">${rankHTML}</div></div>`;
         }
         
-        function attachAdminEventListeners() { /* No longer needed with inline onclick */ }
         function attachSiswaEventListeners() { const submitBtn = document.getElementById('submit-absen-btn'); if(submitBtn) submitBtn.addEventListener('click', handleAbsenSiswa); }
+        function attachGuruEventListeners() { if (currentUser.status === 'disetujui') { const btn = document.getElementById('submit-absen-guru-btn'); if (btn) btn.addEventListener('click', handleAbsenGuru); } }
 
         // --- CRUD & MODAL FUNCTIONS ---
         function openModal(userId = null, role = 'siswa') {
@@ -259,63 +292,27 @@
             const roleInput = document.getElementById('modal-user-role');
             document.getElementById('modal-error').classList.add('hidden');
             document.getElementById('modal-password').value = '';
-            
-            if (userId) { // Edit mode
-                const user = users.find(u => u.id === userId);
-                title.textContent = `Edit Pengguna: ${user.nama}`;
-                idInput.value = user.id;
-                roleInput.value = user.role;
-                document.getElementById('modal-name').value = user.nama;
-                document.getElementById('modal-username').value = user.username;
-                document.getElementById('modal-email').value = user.email;
-                document.getElementById('modal-kelas').value = user.kelas || 'XII-D';
-            } else { // Add mode
-                title.textContent = `Tambah ${role === 'siswa' ? 'Siswa' : 'Guru'} Baru`;
-                idInput.value = '';
-                roleInput.value = role;
-                document.getElementById('modal-name').value = '';
-                document.getElementById('modal-username').value = '';
-                document.getElementById('modal-email').value = '';
-                document.getElementById('modal-kelas').value = 'XII-D';
-            }
+            if (userId) { const user = users.find(u => u.id === userId); title.textContent = `Edit Pengguna: ${user.nama}`; idInput.value = user.id; roleInput.value = user.role; document.getElementById('modal-name').value = user.nama; document.getElementById('modal-username').value = user.username; document.getElementById('modal-email').value = user.email; document.getElementById('modal-kelas').value = user.kelas || 'XII-D'; } else { title.textContent = `Tambah ${role === 'siswa' ? 'Siswa' : 'Guru'} Baru`; idInput.value = ''; roleInput.value = role; document.getElementById('modal-name').value = ''; document.getElementById('modal-username').value = ''; document.getElementById('modal-email').value = ''; document.getElementById('modal-kelas').value = 'XII-D'; }
             toggleKelasSelection(true);
             modal.classList.remove('hidden');
         }
-
         function closeModal() { document.getElementById('user-modal').classList.add('hidden'); }
-
         function handleSaveUser() {
-            const id = document.getElementById('modal-user-id').value;
-            const role = document.getElementById('modal-user-role').value;
-            const name = document.getElementById('modal-name').value;
-            const username = document.getElementById('modal-username').value;
-            const email = document.getElementById('modal-email').value;
-            const password = document.getElementById('modal-password').value;
-            const kelas = document.getElementById('modal-kelas').value;
-            const errorDiv = document.getElementById('modal-error');
-
+            const id = document.getElementById('modal-user-id').value, role = document.getElementById('modal-user-role').value, name = document.getElementById('modal-name').value, username = document.getElementById('modal-username').value, email = document.getElementById('modal-email').value, password = document.getElementById('modal-password').value, kelas = document.getElementById('modal-kelas').value, errorDiv = document.getElementById('modal-error');
             if (!name || !username || !email) { errorDiv.textContent = "Nama, Username, dan Email wajib diisi."; errorDiv.classList.remove('hidden'); return; }
-
             const existingUser = users.find(u => (u.username === username || u.email === email) && u.id != id);
             if (existingUser) { errorDiv.textContent = "Username atau Email sudah digunakan."; errorDiv.classList.remove('hidden'); return; }
-
-            if (id) { // Update existing user
-                const userIndex = users.findIndex(u => u.id == id);
-                users[userIndex] = { ...users[userIndex], nama: name, username, email, ...(role === 'siswa' && { kelas }) };
-                if (password) users[userIndex].password = password;
-            } else { // Add new user
-                if (!password) { errorDiv.textContent = "Password wajib diisi untuk pengguna baru."; errorDiv.classList.remove('hidden'); return; }
-                const newUser = { id: nextUserId++, nama: name, username, email, password, role, status: role === 'guru' ? 'menunggu persetujuan' : 'aktif', ...(role === 'siswa' && { kelas }) };
-                users.push(newUser);
-            }
+            if (id) { const userIndex = users.findIndex(u => u.id == id); users[userIndex] = { ...users[userIndex], nama: name, username, email, ...(role === 'siswa' && { kelas }) }; if (password) users[userIndex].password = password; } else { if (!password) { errorDiv.textContent = "Password wajib diisi untuk pengguna baru."; errorDiv.classList.remove('hidden'); return; } const newUser = { id: nextUserId++, nama: name, username, email, password, role, status: role === 'guru' ? 'menunggu persetujuan' : 'aktif', ...(role === 'siswa' && { kelas }) }; users.push(newUser); }
+            saveData();
             closeModal();
             renderDashboard();
         }
-
         function handleDeleteUser(userId) {
-            if (window.confirm('Apakah Anda yakin ingin menghapus pengguna ini? Aksi ini tidak dapat dibatalkan.')) {
+            if (window.confirm('Apakah Anda yakin ingin menghapus pengguna ini? Semua data absensi terkait juga akan dihapus.')) {
+                const userToDelete = users.find(u => u.id === userId);
+                if (userToDelete.role === 'guru') { teacherAttendanceRecords = teacherAttendanceRecords.filter(r => r.userId !== userId); } else { attendanceRecords = attendanceRecords.filter(r => r.userId !== userId); }
                 users = users.filter(u => u.id !== userId);
-                attendanceRecords = attendanceRecords.filter(r => r.userId !== userId);
+                saveData();
                 renderDashboard();
             }
         }
@@ -325,8 +322,9 @@
             const email = document.getElementById('register-email').value, password = document.getElementById('register-password').value, nama = document.getElementById('register-name').value, username = document.getElementById('register-username').value, role = document.getElementById('register-role').value, kelas = document.getElementById('register-kelas').value, registerError = document.getElementById('register-error');
             if (!email || !password || !nama || !username) { registerError.textContent = "Mohon isi semua field."; registerError.classList.remove('hidden'); return; }
             if (users.find(u => u.email === email || u.username === username)) { registerError.textContent = "Email atau Username sudah terdaftar."; registerError.classList.remove('hidden'); return; }
-            const newUser = { id: nextUserId++, username, email, password, nama, role, status: role === 'guru' ? 'menunggu persetujuan' : 'aktif', ...(role === 'siswa' && { kelas }) };
-            users.push(newUser); alert('Registrasi berhasil! Akun ini hanya aktif selama sesi ini. Silakan login.'); registerError.classList.add('hidden'); showPage('login-page');
+            const newUser = { id: nextUserId++, username, email, password, nama, role, status: role === 'guru' ? 'menunggu persetujuan' : 'aktif', ...(role === 'siswa' && { kelas }) }; users.push(newUser);
+            saveData();
+            alert('Registrasi berhasil! Silakan login.'); registerError.classList.add('hidden'); showPage('login-page');
         };
         window.handleLogin = () => {
             const username = document.getElementById('login-username').value, password = document.getElementById('login-password').value, loginError = document.getElementById('login-error');
@@ -334,17 +332,29 @@
             if (user) { currentUser = user; loginError.classList.add('hidden'); showPage('dashboard-page'); renderDashboard(); } else { loginError.textContent = "Username atau password salah."; loginError.classList.remove('hidden'); }
         };
         window.handleLogout = () => { currentUser = null; showPage('login-page'); };
-        function approveTeacher(uid) { const userIndex = users.findIndex(u => u.id === uid); if (userIndex > -1) { users[userIndex].status = 'disetujui'; renderDashboard(); } }
+        function approveTeacher(uid) { const userIndex = users.findIndex(u => u.id === uid); if (userIndex > -1) { users[userIndex].status = 'disetujui'; saveData(); renderDashboard(); } }
         function handleAbsenSiswa() {
             const status = document.getElementById('status-absen').value, bukti = document.getElementById('bukti-absen').value;
             if ((status === 'Izin' || status === 'Sakit') && !bukti) { alert('Mohon sertakan link bukti untuk status Izin atau Sakit.'); return; }
             attendanceRecords.push({ id: nextAttendanceId++, userId: currentUser.id, tanggal: getTodayDateString(), jam: getCurrentTimeString(), status, bukti, kelas: currentUser.kelas });
+            saveData();
+            alert('Absensi berhasil disimpan!');
+            renderDashboard();
+        }
+        function handleAbsenGuru() {
+            const status = document.getElementById('status-absen-guru').value, bukti = document.getElementById('bukti-absen-guru').value;
+            if ((status === 'Izin' || status === 'Sakit') && !bukti) { alert('Mohon sertakan link bukti untuk status Izin atau Sakit.'); return; }
+            teacherAttendanceRecords.push({ id: nextTeacherAttendanceId++, userId: currentUser.id, tanggal: getTodayDateString(), jam: getCurrentTimeString(), status, bukti });
+            saveData();
             alert('Absensi berhasil disimpan!');
             renderDashboard();
         }
 
         // --- INITIALIZATION ---
-        document.addEventListener('DOMContentLoaded', () => { showPage('login-page'); });
+        document.addEventListener('DOMContentLoaded', () => { 
+            loadData();
+            showPage('login-page'); 
+        });
     </script>
 </body>
 </html>
