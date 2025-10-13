@@ -32,11 +32,11 @@
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
 
     <!-- Container Utama -->
-    <div id="app" class="min-h-screen p-4 flex items-center justify-center bg-gradient-to-br from-blue-500 via-teal-400 to-green-500">
+    <div id="app" class="min-h-screen p-4 flex items-center justify-center bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1470770841072-f978cf4d019e?q=80&w=1470&auto=format&fit=crop')">
 
         <!-- Halaman Login -->
         <div id="login-page" class="page w-full max-w-md">
-            <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 space-y-6">
+            <div class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-2xl rounded-2xl p-8 space-y-6">
                 <div class="text-center">
                     <i class="ph-duotone ph-student text-5xl text-teal-500"></i>
                     <h1 class="text-3xl font-bold text-gray-800 dark:text-white mt-2">Selamat Datang!</h1>
@@ -68,7 +68,7 @@
         
         <!-- Halaman Registrasi -->
         <div id="register-page" class="page w-full max-w-md">
-             <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 space-y-4">
+             <div class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-2xl rounded-2xl p-8 space-y-4">
                 <h1 class="text-2xl font-bold text-center">Registrasi Akun Baru</h1>
                 <div id="register-error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg"></div>
                 <input type="email" id="register-email" placeholder="Email" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border-gray-300 rounded-lg">
@@ -89,7 +89,7 @@
 
         <!-- Halaman Utama Aplikasi (Dashboard) -->
         <div id="dashboard-page" class="page w-full max-w-7xl mx-auto">
-            <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-6 md:p-8">
+            <div class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-2xl rounded-2xl p-6 md:p-8">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-6">
                     <div>
                         <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Dashboard Absensi</h1>
@@ -134,13 +134,11 @@
         const defaultUsers = [ 
             { id: 1, username: 'admin', email: 'admin@sekolah.id', password: 'admin123', nama: 'Admin Sekolah', role: 'admin', status: 'aktif' }, 
             { id: 2, username: 'guru', email: 'guru@sekolah.id', password: 'password', nama: 'Budi Guru', role: 'guru', status: 'disetujui' },
-            { id: 3, username: 'hanna', email: 'hanna@sekolah.id', password: 'password', nama: 'Bu Hanna', role: 'guru', status: 'menunggu persetujuan' },
-            { id: 4, username: 'dodi', email: 'dodi@sekolah.id', password: 'password', nama: 'Pak Dodi', role: 'guru', status: 'menunggu persetujuan' },
-            { id: 5, username: 'aldebaran', email: 'siswa@sekolah.id', password: '1', nama: 'Aldebaran Adam Syahputra', role: 'siswa', kelas: 'XII-D', status: 'aktif' }, 
-            { id: 6, username: 'anzillah', email: 'anzillah@sekolah.id', password: '2', nama: 'Anzillah Nurcahaya', role: 'siswa', kelas: 'XII-D', status: 'aktif' }
+            { id: 3, username: 'aldebaran', email: 'siswa@sekolah.id', password: '1', nama: 'Aldebaran Adam Syahputra', role: 'siswa', kelas: 'XII-D', status: 'aktif' }, 
+            { id: 4, username: 'anzillah', email: 'anzillah@sekolah.id', password: '2', nama: 'Anzillah Nurcahaya', role: 'siswa', kelas: 'XII-D', status: 'aktif' }
         ];
         const studentNames = ['Aulia Danish', 'Chairil Ahmad Fathir', 'Daiva Bhagja Wangsapriyatman', 'Dellaluna Nur Agustina', 'Denian Prasetya', 'Fadhillah Nursyifa', 'Ghaisan Rafani', 'Hasna Fauziah Aqila', 'Heni Ramadhani', 'Iyan Apriansa', 'Keihsa Anindya Danastri H', 'Kintan Putri Haryono', 'Muhamad Fajri Bakkah', 'Muhamad Farhan', 'Muhammad Nabil Fadlurrohman', 'Muhammad Ridhan Fajari', 'Muhammad Rizqy Irza Saputra', 'Nadia Aprianca Putri', 'Naisya Aufiya Indri', 'Nasya Tri Febriyani', 'Naya Nardiana', 'Nur Maya Aini', 'Puspita Widia Kusumaningsih', 'Puteri Rosmayanti', 'Rafa Yanwardi Azhar', 'Raka Alif Al Aziz', 'Resti Julianti', 'Siti Nurmalia Ramadhan', 'Sultan Fardhan Anggestu', 'Sumayyah Dema Nazihah', 'Syafira Ramadhani', 'Syakilla Insan Sabria', 'Syifa Amelia Dalimunthe', 'Zahratunnisa'];
-        let tempNextUserId = 7;
+        let tempNextUserId = 5;
         studentNames.forEach((name, index) => {
             const nameParts = name.split(' ');
             let username;
@@ -151,7 +149,7 @@
             }
             defaultUsers.push({ id: tempNextUserId++, username: username, email: username + '@sekolah.id', password: (index + 3).toString(), nama: name, role: 'siswa', kelas: 'XII-D', status: 'aktif' });
         });
-        const defaultAttendanceRecords = [ { id: 1, userId: 5, tanggal: '2025-10-01', jam: '07:30', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 2, userId: 6, tanggal: '2025-10-01', jam: '08:00', status: 'Sakit', bukti: 'https://i.ibb.co/6bs0k63/surat-sakit.png', kelas: 'XII-D' }, { id: 3, userId: 5, tanggal: '2025-09-30', jam: '07:25', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 4, userId: 6, tanggal: '2025-09-30', jam: '07:28', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 5, userId: 7, tanggal: '2025-09-30', jam: '09:00', status: 'Izin', bukti: 'https://example.com/surat-izin.jpg', kelas: 'XII-D' }, { id: 6, userId: 5, tanggal: '2025-09-29', jam: '07:20', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 7, userId: 6, tanggal: '2025-09-29', jam: '08:15', status: 'Sakit', bukti: '', kelas: 'XII-D' }];
+        const defaultAttendanceRecords = [ { id: 1, userId: 3, tanggal: '2025-10-01', jam: '07:30', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 2, userId: 4, tanggal: '2025-10-01', jam: '08:00', status: 'Sakit', bukti: 'https://i.ibb.co/6bs0k63/surat-sakit.png', kelas: 'XII-D' }, { id: 3, userId: 3, tanggal: '2025-09-30', jam: '07:25', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 4, userId: 4, tanggal: '2025-09-30', jam: '07:28', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 5, userId: 5, tanggal: '2025-09-30', jam: '09:00', status: 'Izin', bukti: 'https://example.com/surat-izin.jpg', kelas: 'XII-D' }, { id: 6, userId: 3, tanggal: '2025-09-29', jam: '07:20', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 7, userId: 4, tanggal: '2025-09-29', jam: '08:15', status: 'Sakit', bukti: '', kelas: 'XII-D' }];
         const defaultTeacherAttendanceRecords = [{ id: 1, userId: 2, tanggal: '2025-10-01', jam: '07:05', status: 'Hadir', bukti: '' }];
         
         // --- GLOBAL STATE ---
@@ -227,7 +225,7 @@
             let teacherAttendanceRows = '';
             teacherAttendanceRecords.sort((a, b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => {
                 const teacher = users.find(u => u.id === rec.userId);
-                if (teacher) { teacherAttendanceRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-3">${teacher.nama}</td><td class="p-3">${rec.tanggal}</td><td class="p-3">${rec.jam}</td><td class="p-3">${rec.status}</td><td class="p-3">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="flex items-center text-teal-500 hover:underline"><i class="ph-image-square mr-1"></i>Lihat Bukti</a>` : '-'}</td></tr>`; }
+                if (teacher) { teacherAttendanceRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-3">${teacher.nama}</td><td class="p-3">${rec.tanggal}</td><td class="p-3">${rec.jam}</td><td class="p-3">${rec.status}</td><td class="p-3">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="inline-flex items-center bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200"><i class="ph-image-square mr-1"></i>Lihat</a>` : '-'}</td></tr>`; }
             });
             const teacherAttendanceHTML = `<div class="mt-8"><h2 class="text-2xl font-bold mb-4">Rekap Absensi Seluruh Guru</h2><div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700"><tr><th class="p-3 font-semibold">Nama Guru</th><th class="p-3 font-semibold">Tanggal</th><th class="p-3 font-semibold">Jam</th><th class="p-3 font-semibold">Status</th><th class="p-3 font-semibold">Bukti</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${teacherAttendanceRows}</tbody></table></div></div>`;
             
@@ -239,7 +237,7 @@
             const today = getTodayDateString();
             const todayAttendance = teacherAttendanceRecords.find(r => r.userId === currentUser.id && r.tanggal === today);
             let historyRows = '';
-            teacherAttendanceRecords.filter(r => r.userId === currentUser.id).sort((a,b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => { historyRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-2">${rec.tanggal}</td><td class="p-2">${rec.jam}</td><td class="p-2">${rec.status}</td><td class="p-2">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="flex items-center text-teal-500 hover:underline"><i class="ph-image-square mr-1"></i>Lihat Bukti</a>` : '-'}</td></tr>`; });
+            teacherAttendanceRecords.filter(r => r.userId === currentUser.id).sort((a,b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => { historyRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-2">${rec.tanggal}</td><td class="p-2">${rec.jam}</td><td class="p-2">${rec.status}</td><td class="p-2">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="inline-flex items-center bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200"><i class="ph-image-square mr-1"></i>Lihat</a>` : '-'}</td></tr>`; });
             let attendanceCardContent = todayAttendance ? `<div class="text-center"><i class="ph-duotone ph-check-circle text-6xl text-green-500"></i><h3 class="text-xl font-bold mt-2">Absensi Berhasil!</h3><p class="text-gray-500 dark:text-gray-400">Anda sudah absen hari ini (${todayAttendance.jam}) dengan status: <strong>${todayAttendance.status}</strong>.</p></div>` 
             : `<p class="mb-4 font-semibold">Anda belum absen hari ini.</p><div class="space-y-4"><select id="status-absen-guru" class="w-full p-2 border rounded-md bg-white dark:bg-gray-800"><option>Hadir</option><option>Izin</option><option>Sakit</option></select><div><p class="text-xs text-gray-500 mb-1">Butuh link untuk bukti? Unggah foto di sini:</p><a href="https://imgbb.com/" target="_blank" class="w-full flex items-center justify-center text-sm bg-gray-200 dark:bg-gray-600 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"><i class="ph-upload-simple mr-2"></i> Unggah ke ImgBB.com</a></div><input type="text" id="bukti-absen-guru" placeholder="Tempel Link Foto Bukti di sini" class="w-full p-2 border rounded-md bg-white dark:bg-gray-800"><button id="submit-absen-guru-btn" class="w-full bg-teal-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-teal-700">Kirim Absen</button></div>`;
             const teacherAttendanceHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="col-span-1 md:col-span-2"><hr class="my-8 border-t-2 border-gray-200 dark:border-gray-700"></div><div><h2 class="flex items-center text-2xl font-bold mb-4"><i class="ph-chalkboard-teacher mr-3 text-teal-400"></i>Absensi Anda Hari Ini</h2><div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow">${attendanceCardContent}</div></div><div><h2 class="flex items-center text-2xl font-bold mb-4"><i class="ph-list-dashes mr-3 text-teal-400"></i>Riwayat Absensi Anda</h2><div class="overflow-y-auto max-h-96 bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700 sticky top-0"><tr><th class="p-2 font-semibold">Tanggal</th><th class="p-2 font-semibold">Jam</th><th class="p-2 font-semibold">Status</th><th class="p-2 font-semibold">Bukti</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${historyRows}</tbody></table></div></div><div class="col-span-1 md:col-span-2"><hr class="my-8 border-t-2 border-gray-200 dark:border-gray-700"></div></div>`;
@@ -255,14 +253,23 @@
                 studentRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-3">${student.nama}</td><td class="p-3"><span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusStyles[status]}">${status}</span></td></tr>`;
             });
             const todayRecapHTML = `<h2 class="text-2xl font-bold mb-4">Rekap Absensi Siswa Kelas XII-D (${today})</h2><div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"><div class="bg-green-100 dark:bg-green-900/50 p-4 rounded-lg text-center shadow"><p class="text-3xl font-bold text-green-700 dark:text-green-300">${summary['Hadir']}</p><p class="text-sm text-green-600 dark:text-green-400">Hadir</p></div><div class="bg-yellow-100 dark:bg-yellow-900/50 p-4 rounded-lg text-center shadow"><p class="text-3xl font-bold text-yellow-700 dark:text-yellow-300">${summary['Sakit']}</p><p class="text-sm text-yellow-600 dark:text-yellow-400">Sakit</p></div><div class="bg-blue-100 dark:bg-blue-900/50 p-4 rounded-lg text-center shadow"><p class="text-3xl font-bold text-blue-700 dark:text-blue-300">${summary['Izin']}</p><p class="text-sm text-blue-600 dark:text-blue-400">Izin</p></div><div class="bg-gray-200 dark:bg-gray-700/50 p-4 rounded-lg text-center shadow"><p class="text-3xl font-bold text-gray-700 dark:text-gray-300">${summary['Belum Absen']}</p><p class="text-sm text-gray-600 dark:text-gray-400">Belum Absen</p></div></div><div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700"><tr><th class="p-3 font-semibold">Nama Siswa</th><th class="p-3 font-semibold">Status Hari Ini</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${studentRows}</tbody></table></div>`;
-            return imageHTML + teacherAttendanceHTML + todayRecapHTML + renderAttendanceRankings(studentsInClass);
+
+            let studentHistoryRows = '';
+            const studentIdsInClass = studentsInClass.map(s => s.id);
+            attendanceRecords.filter(r => studentIdsInClass.includes(r.userId)).sort((a,b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => {
+                const student = users.find(u => u.id === rec.userId);
+                studentHistoryRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-3">${student.nama}</td><td class="p-3">${rec.tanggal}</td><td class="p-3">${rec.jam}</td><td class="p-3">${rec.status}</td><td class="p-3">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="inline-flex items-center bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200"><i class="ph-image-square mr-1"></i>Lihat</a>` : '-'}</td></tr>`;
+            });
+            const studentHistoryHTML = `<div class="mt-8"><h2 class="text-2xl font-bold mb-4">Riwayat Absensi Siswa</h2><div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700"><tr><th class="p-3 font-semibold">Nama Siswa</th><th class="p-3 font-semibold">Tanggal</th><th class="p-3 font-semibold">Jam</th><th class="p-3 font-semibold">Status</th><th class="p-3 font-semibold">Bukti</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${studentHistoryRows}</tbody></table></div></div>`;
+            
+            return imageHTML + teacherAttendanceHTML + todayRecapHTML + studentHistoryHTML + renderAttendanceRankings(studentsInClass);
         }
 
         function renderSiswaDashboard() {
              const imageHTML = `<div class="mb-6"><img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1532&auto=format&fit=crop" alt="Ilustrasi siswa belajar" class="w-full h-48 object-cover rounded-lg shadow-md"></div>`;
              const todayAttendance = attendanceRecords.find(r => r.userId === currentUser.id && r.tanggal === getTodayDateString());
              let historyRows = '';
-             attendanceRecords.filter(r => r.userId === currentUser.id).sort((a,b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => { historyRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-2">${rec.tanggal}</td><td class="p-2">${rec.jam}</td><td class="p-2">${rec.status}</td><td class="p-2">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="flex items-center text-teal-500 hover:underline"><i class="ph-image-square mr-1"></i>Lihat Bukti</a>` : '-'}</td></tr>`; });
+             attendanceRecords.filter(r => r.userId === currentUser.id).sort((a,b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => { historyRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-2">${rec.tanggal}</td><td class="p-2">${rec.jam}</td><td class="p-2">${rec.status}</td><td class="p-2">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="inline-flex items-center bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200"><i class="ph-image-square mr-1"></i>Lihat</a>` : '-'}</td></tr>`; });
             let attendanceCardContent = todayAttendance ? `<div class="text-center"><i class="ph-duotone ph-check-circle text-6xl text-green-500"></i><h3 class="text-xl font-bold mt-2">Absensi Berhasil!</h3><p class="text-gray-500 dark:text-gray-400">Anda sudah absen hari ini (${todayAttendance.jam}) dengan status: <strong>${todayAttendance.status}</strong>.</p></div>` 
             : `<p class="mb-4 font-semibold">Anda belum absen hari ini.</p><div class="space-y-4"><select id="status-absen" class="w-full p-2 border rounded-md bg-white dark:bg-gray-800"><option>Hadir</option><option>Izin</option><option>Sakit</option></select><div><p class="text-xs text-gray-500 mb-1">Butuh link untuk bukti? Unggah foto di sini:</p><a href="https://imgbb.com/" target="_blank" class="w-full flex items-center justify-center text-sm bg-gray-200 dark:bg-gray-600 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"><i class="ph-upload-simple mr-2"></i> Unggah ke ImgBB.com</a></div><input type="text" id="bukti-absen" placeholder="Tempel Link Foto Bukti di sini" class="w-full p-2 border rounded-md bg-white dark:bg-gray-800"><button id="submit-absen-btn" class="w-full bg-teal-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-teal-700">Kirim Absen</button></div>`;
             return imageHTML + `<div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h2 class="flex items-center text-2xl font-bold mb-4"><i class="ph-calendar-check mr-3 text-teal-400"></i>Absensi Hari Ini</h2><div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow">${attendanceCardContent}</div></div><div><h2 class="flex items-center text-2xl font-bold mb-4"><i class="ph-list-checks mr-3 text-teal-400"></i>Riwayat Absensi Anda</h2><div class="overflow-y-auto max-h-96 bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700 sticky top-0"><tr><th class="p-2 font-semibold">Tanggal</th><th class="p-2 font-semibold">Jam</th><th class="p-2 font-semibold">Status</th><th class="p-2 font-semibold">Bukti</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${historyRows}</tbody></table></div></div></div>`;
