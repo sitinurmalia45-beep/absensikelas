@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Absensi Kelas Online (Lokal)</title>
+    <title>Sistem Absensi Kelas Online (Supabase)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -30,6 +31,10 @@
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="fixed inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-sm">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-teal-500"></div>
+    </div>
 
     <!-- Container Utama -->
     <div id="app" class="min-h-screen p-4 flex items-center justify-center bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1470770841072-f978cf4d019e?q=80&w=1470&auto=format&fit=crop')">
@@ -57,12 +62,6 @@
                     <i class="ph-sign-in mr-2"></i> Login
                 </button>
                 <p class="text-center text-sm">Belum punya akun? <a href="#" onclick="showPage('register-page')" class="text-teal-500 hover:underline">Registrasi di sini</a></p>
-                <div class="text-xs text-center text-gray-400 dark:text-gray-500 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <p class="font-bold">Akun Demo:</p>
-                    <p>Admin: <span class="font-mono">admin / admin123</span></p>
-                    <p>Guru: <span class="font-mono">guru / password</span></p>
-                    <p>Siswa: <span class="font-mono">aldebaran / 1</span></p>
-                </div>
             </div>
         </div>
         
@@ -128,65 +127,45 @@
     </div>
 
     <script>
-        // --- DATA LOKAL (PENGGANTI DATABASE) ---
-        let users, attendanceRecords, teacherAttendanceRecords, nextUserId, nextAttendanceId, nextTeacherAttendanceId;
+        // --- KONFIGURASI SUPABASE ---
+        // PENTING: Ganti nilai di bawah ini dengan URL dan Kunci API dari proyek Supabase Anda.
+        // Error "Failed to fetch" terjadi karena nilai di bawah ini MASIH SALAH atau BELUM DIGANTI.
+        const SUPABASE_URL = 'https://hkbvarmdnrvzjnpaumuq.supabase.co'; // PERBAIKAN: Menambahkan tanda kutip penutup
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhrYnZhcm1kbnJ2empucGF1bXVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0NTc0MDIsImV4cCI6MjA3NjAzMzQwMn0.0SOfoY2S19orbuYnU6Wvc7qapRwRyK9b2VPwGhTvCJU'; // CONTOH: 'eyJhbGciOiJIUzI1Ni...'
         
-        const defaultUsers = [ 
-            { id: 1, username: 'admin', email: 'admin@sekolah.id', password: 'admin123', nama: 'Admin Sekolah', role: 'admin', status: 'aktif' }, 
-            { id: 2, username: 'guru', email: 'guru@sekolah.id', password: 'password', nama: 'Budi Guru', role: 'guru', status: 'disetujui' },
-            { id: 3, username: 'aldebaran', email: 'siswa@sekolah.id', password: '1', nama: 'Aldebaran Adam Syahputra', role: 'siswa', kelas: 'XII-D', status: 'aktif' }, 
-            { id: 4, username: 'anzillah', email: 'anzillah@sekolah.id', password: '2', nama: 'Anzillah Nurcahaya', role: 'siswa', kelas: 'XII-D', status: 'aktif' }
-        ];
-        const studentNames = ['Aulia Danish', 'Chairil Ahmad Fathir', 'Daiva Bhagja Wangsapriyatman', 'Dellaluna Nur Agustina', 'Denian Prasetya', 'Fadhillah Nursyifa', 'Ghaisan Rafani', 'Hasna Fauziah Aqila', 'Heni Ramadhani', 'Iyan Apriansa', 'Keihsa Anindya Danastri H', 'Kintan Putri Haryono', 'Muhamad Fajri Bakkah', 'Muhamad Farhan', 'Muhammad Nabil Fadlurrohman', 'Muhammad Ridhan Fajari', 'Muhammad Rizqy Irza Saputra', 'Nadia Aprianca Putri', 'Naisya Aufiya Indri', 'Nasya Tri Febriyani', 'Naya Nardiana', 'Nur Maya Aini', 'Puspita Widia Kusumaningsih', 'Puteri Rosmayanti', 'Rafa Yanwardi Azhar', 'Raka Alif Al Aziz', 'Resti Julianti', 'Siti Nurmalia Ramadhan', 'Sultan Fardhan Anggestu', 'Sumayyah Dema Nazihah', 'Syafira Ramadhani', 'Syakilla Insan Sabria', 'Syifa Amelia Dalimunthe', 'Zahratunnisa'];
-        let tempNextUserId = 5;
-        studentNames.forEach((name, index) => {
-            const nameParts = name.split(' ');
-            let username;
-            if ((nameParts[0].toLowerCase() === 'muhammad' || nameParts[0].toLowerCase() === 'muhamad') && nameParts.length > 1) {
-                username = nameParts[1].toLowerCase();
+        let supabase;
+        try {
+            // PERBAIKAN: Menghapus pengecekan placeholder yang sudah tidak relevan
+            if (window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             } else {
-                username = nameParts[0].toLowerCase();
+                throw new Error("Supabase library (supabase-js) gagal dimuat. Periksa koneksi internet.");
             }
-            defaultUsers.push({ id: tempNextUserId++, username: username, email: username + '@sekolah.id', password: (index + 3).toString(), nama: name, role: 'siswa', kelas: 'XII-D', status: 'aktif' });
-        });
-        const defaultAttendanceRecords = [ { id: 1, userId: 3, tanggal: '2025-10-01', jam: '07:30', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 2, userId: 4, tanggal: '2025-10-01', jam: '08:00', status: 'Sakit', bukti: 'https://i.ibb.co/6bs0k63/surat-sakit.png', kelas: 'XII-D' }, { id: 3, userId: 3, tanggal: '2025-09-30', jam: '07:25', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 4, userId: 4, tanggal: '2025-09-30', jam: '07:28', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 5, userId: 5, tanggal: '2025-09-30', jam: '09:00', status: 'Izin', bukti: 'https://example.com/surat-izin.jpg', kelas: 'XII-D' }, { id: 6, userId: 3, tanggal: '2025-09-29', jam: '07:20', status: 'Hadir', bukti: '', kelas: 'XII-D' }, { id: 7, userId: 4, tanggal: '2025-09-29', jam: '08:15', status: 'Sakit', bukti: '', kelas: 'XII-D' }];
-        const defaultTeacherAttendanceRecords = [{ id: 1, userId: 2, tanggal: '2025-10-01', jam: '07:05', status: 'Hadir', bukti: '' }];
-        
+        } catch (error) {
+            console.error("Supabase initialization failed:", error.message);
+            // Tampilkan error ini di UI agar pengguna sadar
+            const loginError = document.getElementById('login-error');
+            if (loginError) {
+                loginError.textContent = "Error Inisialisasi: " + error.message;
+                loginError.classList.remove('hidden');
+            }
+        }
+
         // --- GLOBAL STATE ---
+        let users = [], attendanceRecords = [], teacherAttendanceRecords = [];
         let currentUser = null;
 
-        // --- LOCAL STORAGE FUNCTIONS ---
-        function saveData() {
-            localStorage.setItem('absensi_users', JSON.stringify(users));
-            localStorage.setItem('absensi_records', JSON.stringify(attendanceRecords));
-            localStorage.setItem('absensi_teacher_records', JSON.stringify(teacherAttendanceRecords));
-            localStorage.setItem('absensi_nextUserId', nextUserId);
-            localStorage.setItem('absensi_nextAttendanceId', nextAttendanceId);
-            localStorage.setItem('absensi_nextTeacherAttendanceId', nextTeacherAttendanceId);
-        }
-
-        function loadData() {
-            const storedUsers = localStorage.getItem('absensi_users');
-            if (storedUsers) {
-                users = JSON.parse(storedUsers);
-                attendanceRecords = JSON.parse(localStorage.getItem('absensi_records'));
-                teacherAttendanceRecords = JSON.parse(localStorage.getItem('absensi_teacher_records'));
-                nextUserId = parseInt(localStorage.getItem('absensi_nextUserId'));
-                nextAttendanceId = parseInt(localStorage.getItem('absensi_nextAttendanceId'));
-                nextTeacherAttendanceId = parseInt(localStorage.getItem('absensi_nextTeacherAttendanceId'));
-            } else {
-                users = defaultUsers;
-                attendanceRecords = defaultAttendanceRecords;
-                teacherAttendanceRecords = defaultTeacherAttendanceRecords;
-                nextUserId = tempNextUserId;
-                nextAttendanceId = 8;
-                nextTeacherAttendanceId = 2;
-                saveData();
-            }
-        }
-
         // --- UI HELPER FUNCTIONS ---
-        window.showPage = (pageId) => { document.querySelectorAll('#app > div.page').forEach(div => div.classList.remove('page-active')); document.getElementById(pageId).classList.add('page-active'); };
+        const spinner = document.getElementById('loading-spinner');
+        const showSpinner = () => spinner.classList.remove('hidden');
+        const hideSpinner = () => spinner.classList.add('hidden');
+
+        window.showPage = (pageId) => {
+            document.querySelectorAll('#app > div.page').forEach(div => div.classList.remove('page-active'));
+            const page = document.getElementById(pageId);
+            if(page) page.classList.add('page-active');
+        };
+
         window.toggleKelasSelection = (isModal = false) => { 
             const role = isModal ? document.getElementById('modal-user-role').value : document.getElementById('register-role').value;
             const kelasEl = isModal ? document.getElementById('modal-kelas') : document.getElementById('register-kelas');
@@ -194,8 +173,32 @@
         };
         function getTodayDateString() { const today = new Date(); const year = today.getFullYear(); const month = String(today.getMonth() + 1).padStart(2, '0'); const day = String(today.getDate()).padStart(2, '0'); return `${year}-${month}-${day}`; }
         function getCurrentTimeString() { const now = new Date(); const hours = String(now.getHours()).padStart(2, '0'); const minutes = String(now.getMinutes()).padStart(2, '0'); return `${hours}:${minutes}`; }
+        
+        // --- DATA FUNCTIONS (SUPABASE) ---
+        async function loadAllData() {
+            showSpinner();
+            try {
+                const { data: usersData, error: usersError } = await supabase.from('user').select('*'); // Ganti 'users' menjadi 'user'
+                if (usersError) throw usersError;
+                users = usersData;
 
-        // --- RENDER FUNCTIONS ---
+                const { data: recordsData, error: recordsError } = await supabase.from('attendance_records').select('*');
+                if (recordsError) throw recordsError;
+                attendanceRecords = recordsData;
+
+                const { data: teacherRecordsData, error: teacherRecordsError } = await supabase.from('teacher_attendance_records').select('*');
+                if (teacherRecordsError) throw teacherRecordsError;
+                teacherAttendanceRecords = teacherRecordsData;
+
+            } catch (error) {
+                console.error("Error loading data:", error.message);
+                alert("Gagal memuat data dari database. Pastikan konfigurasi Supabase sudah benar dan RLS diaktifkan. Lihat file panduan.");
+            } finally {
+                hideSpinner();
+            }
+        }
+
+        // --- RENDER FUNCTIONS (Sama seperti sebelumnya, tapi sekarang membaca data dari variabel global yang diisi dari Supabase) ---
         function renderDashboard() {
             if (!currentUser) return;
             document.getElementById('welcome-message').textContent = `Selamat datang, ${currentUser.nama} | Peran: ${currentUser.role}`;
@@ -224,7 +227,7 @@
 
             let teacherAttendanceRows = '';
             teacherAttendanceRecords.sort((a, b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => {
-                const teacher = users.find(u => u.id === rec.userId);
+                const teacher = users.find(u => u.id === rec.user_id);
                 if (teacher) { teacherAttendanceRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-3">${teacher.nama}</td><td class="p-3">${rec.tanggal}</td><td class="p-3">${rec.jam}</td><td class="p-3">${rec.status}</td><td class="p-3">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="inline-flex items-center bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200"><i class="ph-image-square mr-1"></i>Lihat</a>` : '-'}</td></tr>`; }
             });
             const teacherAttendanceHTML = `<div class="mt-8"><h2 class="text-2xl font-bold mb-4">Rekap Absensi Seluruh Guru</h2><div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700"><tr><th class="p-3 font-semibold">Nama Guru</th><th class="p-3 font-semibold">Tanggal</th><th class="p-3 font-semibold">Jam</th><th class="p-3 font-semibold">Status</th><th class="p-3 font-semibold">Bukti</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${teacherAttendanceRows}</tbody></table></div></div>`;
@@ -235,9 +238,9 @@
         function renderGuruDashboard() {
             const imageHTML = `<div class="mb-6"><img src="https://images.unsplash.com/photo-1588075592446-265fd1e6e76f?q=80&w=1472&auto=format&fit=crop" alt="Ilustrasi guru mengajar" class="w-full h-48 object-cover rounded-lg shadow-md"></div>`;
             const today = getTodayDateString();
-            const todayAttendance = teacherAttendanceRecords.find(r => r.userId === currentUser.id && r.tanggal === today);
+            const todayAttendance = teacherAttendanceRecords.find(r => r.user_id === currentUser.id && r.tanggal === today);
             let historyRows = '';
-            teacherAttendanceRecords.filter(r => r.userId === currentUser.id).sort((a,b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => { historyRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-2">${rec.tanggal}</td><td class="p-2">${rec.jam}</td><td class="p-2">${rec.status}</td><td class="p-2">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="inline-flex items-center bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200"><i class="ph-image-square mr-1"></i>Lihat</a>` : '-'}</td></tr>`; });
+            teacherAttendanceRecords.filter(r => r.user_id === currentUser.id).sort((a,b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => { historyRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-2">${rec.tanggal}</td><td class="p-2">${rec.jam}</td><td class="p-2">${rec.status}</td><td class="p-2">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="inline-flex items-center bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200"><i class="ph-image-square mr-1"></i>Lihat</a>` : '-'}</td></tr>`; });
             let attendanceCardContent = todayAttendance ? `<div class="text-center"><i class="ph-duotone ph-check-circle text-6xl text-green-500"></i><h3 class="text-xl font-bold mt-2">Absensi Berhasil!</h3><p class="text-gray-500 dark:text-gray-400">Anda sudah absen hari ini (${todayAttendance.jam}) dengan status: <strong>${todayAttendance.status}</strong>.</p></div>` 
             : `<p class="mb-4 font-semibold">Anda belum absen hari ini.</p><div class="space-y-4"><select id="status-absen-guru" class="w-full p-2 border rounded-md bg-white dark:bg-gray-800"><option>Hadir</option><option>Izin</option><option>Sakit</option></select><div><p class="text-xs text-gray-500 mb-1">Butuh link untuk bukti? Unggah foto di sini:</p><a href="https://imgbb.com/" target="_blank" class="w-full flex items-center justify-center text-sm bg-gray-200 dark:bg-gray-600 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"><i class="ph-upload-simple mr-2"></i> Unggah ke ImgBB.com</a></div><input type="text" id="bukti-absen-guru" placeholder="Tempel Link Foto Bukti di sini" class="w-full p-2 border rounded-md bg-white dark:bg-gray-800"><button id="submit-absen-guru-btn" class="w-full bg-teal-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-teal-700">Kirim Absen</button></div>`;
             const teacherAttendanceHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div class="col-span-1 md:col-span-2"><hr class="my-8 border-t-2 border-gray-200 dark:border-gray-700"></div><div><h2 class="flex items-center text-2xl font-bold mb-4"><i class="ph-chalkboard-teacher mr-3 text-teal-400"></i>Absensi Anda Hari Ini</h2><div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow">${attendanceCardContent}</div></div><div><h2 class="flex items-center text-2xl font-bold mb-4"><i class="ph-list-dashes mr-3 text-teal-400"></i>Riwayat Absensi Anda</h2><div class="overflow-y-auto max-h-96 bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700 sticky top-0"><tr><th class="p-2 font-semibold">Tanggal</th><th class="p-2 font-semibold">Jam</th><th class="p-2 font-semibold">Status</th><th class="p-2 font-semibold">Bukti</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${historyRows}</tbody></table></div></div><div class="col-span-1 md:col-span-2"><hr class="my-8 border-t-2 border-gray-200 dark:border-gray-700"></div></div>`;
@@ -246,7 +249,7 @@
             const summary = { 'Hadir': 0, 'Sakit': 0, 'Izin': 0, 'Belum Absen': 0 };
             let studentRows = '';
             studentsInClass.forEach(student => {
-                const attendance = attendanceRecords.find(r => r.userId === student.id && r.tanggal === today);
+                const attendance = attendanceRecords.find(r => r.user_id === student.id && r.tanggal === today);
                 const status = attendance ? attendance.status : 'Belum Absen';
                 summary[status]++;
                 const statusStyles = { 'Hadir': 'bg-green-100 text-green-800', 'Sakit': 'bg-yellow-100 text-yellow-800', 'Izin': 'bg-blue-100 text-blue-800', 'Alfa': 'bg-red-100 text-red-800', 'Belum Absen': 'bg-gray-200 text-gray-800' };
@@ -256,8 +259,8 @@
 
             let studentHistoryRows = '';
             const studentIdsInClass = studentsInClass.map(s => s.id);
-            attendanceRecords.filter(r => studentIdsInClass.includes(r.userId)).sort((a,b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => {
-                const student = users.find(u => u.id === rec.userId);
+            attendanceRecords.filter(r => studentIdsInClass.includes(r.user_id)).sort((a,b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => {
+                const student = users.find(u => u.id === rec.user_id);
                 studentHistoryRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-3">${student.nama}</td><td class="p-3">${rec.tanggal}</td><td class="p-3">${rec.jam}</td><td class="p-3">${rec.status}</td><td class="p-3">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="inline-flex items-center bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200"><i class="ph-image-square mr-1"></i>Lihat</a>` : '-'}</td></tr>`;
             });
             const studentHistoryHTML = `<div class="mt-8"><h2 class="text-2xl font-bold mb-4">Riwayat Absensi Siswa</h2><div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700"><tr><th class="p-3 font-semibold">Nama Siswa</th><th class="p-3 font-semibold">Tanggal</th><th class="p-3 font-semibold">Jam</th><th class="p-3 font-semibold">Status</th><th class="p-3 font-semibold">Bukti</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${studentHistoryRows}</tbody></table></div></div>`;
@@ -267,9 +270,9 @@
 
         function renderSiswaDashboard() {
              const imageHTML = `<div class="mb-6"><img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1532&auto=format&fit=crop" alt="Ilustrasi siswa belajar" class="w-full h-48 object-cover rounded-lg shadow-md"></div>`;
-             const todayAttendance = attendanceRecords.find(r => r.userId === currentUser.id && r.tanggal === getTodayDateString());
+             const todayAttendance = attendanceRecords.find(r => r.user_id === currentUser.id && r.tanggal === getTodayDateString());
              let historyRows = '';
-             attendanceRecords.filter(r => r.userId === currentUser.id).sort((a,b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => { historyRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-2">${rec.tanggal}</td><td class="p-2">${rec.jam}</td><td class="p-2">${rec.status}</td><td class="p-2">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="inline-flex items-center bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200"><i class="ph-image-square mr-1"></i>Lihat</a>` : '-'}</td></tr>`; });
+             attendanceRecords.filter(r => r.user_id === currentUser.id).sort((a,b) => b.tanggal.localeCompare(a.tanggal) || b.jam.localeCompare(a.jam)).forEach(rec => { historyRows += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-2">${rec.tanggal}</td><td class="p-2">${rec.jam}</td><td class="p-2">${rec.status}</td><td class="p-2">${rec.bukti ? `<a href="${rec.bukti}" target="_blank" class="inline-flex items-center bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-1 rounded-full dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-200"><i class="ph-image-square mr-1"></i>Lihat</a>` : '-'}</td></tr>`; });
             let attendanceCardContent = todayAttendance ? `<div class="text-center"><i class="ph-duotone ph-check-circle text-6xl text-green-500"></i><h3 class="text-xl font-bold mt-2">Absensi Berhasil!</h3><p class="text-gray-500 dark:text-gray-400">Anda sudah absen hari ini (${todayAttendance.jam}) dengan status: <strong>${todayAttendance.status}</strong>.</p></div>` 
             : `<p class="mb-4 font-semibold">Anda belum absen hari ini.</p><div class="space-y-4"><select id="status-absen" class="w-full p-2 border rounded-md bg-white dark:bg-gray-800"><option>Hadir</option><option>Izin</option><option>Sakit</option></select><div><p class="text-xs text-gray-500 mb-1">Butuh link untuk bukti? Unggah foto di sini:</p><a href="https://imgbb.com/" target="_blank" class="w-full flex items-center justify-center text-sm bg-gray-200 dark:bg-gray-600 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"><i class="ph-upload-simple mr-2"></i> Unggah ke ImgBB.com</a></div><input type="text" id="bukti-absen" placeholder="Tempel Link Foto Bukti di sini" class="w-full p-2 border rounded-md bg-white dark:bg-gray-800"><button id="submit-absen-btn" class="w-full bg-teal-600 text-white font-semibold px-6 py-2 rounded-md hover:bg-teal-700">Kirim Absen</button></div>`;
             return imageHTML + `<div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h2 class="flex items-center text-2xl font-bold mb-4"><i class="ph-calendar-check mr-3 text-teal-400"></i>Absensi Hari Ini</h2><div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow">${attendanceCardContent}</div></div><div><h2 class="flex items-center text-2xl font-bold mb-4"><i class="ph-list-checks mr-3 text-teal-400"></i>Riwayat Absensi Anda</h2><div class="overflow-y-auto max-h-96 bg-white dark:bg-gray-800 rounded-lg shadow"><table class="w-full text-left"><thead class="bg-gray-100 dark:bg-gray-700 sticky top-0"><tr><th class="p-2 font-semibold">Tanggal</th><th class="p-2 font-semibold">Jam</th><th class="p-2 font-semibold">Status</th><th class="p-2 font-semibold">Bukti</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-600">${historyRows}</tbody></table></div></div></div>`;
@@ -277,7 +280,7 @@
 
         function renderAttendanceRankings(studentList) {
             let rankings = studentList.map(student => {
-                const studentRecords = attendanceRecords.filter(r => r.userId === student.id);
+                const studentRecords = attendanceRecords.filter(r => r.user_id === student.id);
                 const hadirCount = studentRecords.filter(r => r.status === 'Hadir').length;
                 const totalRecords = studentRecords.length;
                 const percentage = totalRecords > 0 ? Math.round((hadirCount / totalRecords) * 100) : 0;
@@ -291,7 +294,7 @@
         function attachSiswaEventListeners() { const submitBtn = document.getElementById('submit-absen-btn'); if(submitBtn) submitBtn.addEventListener('click', handleAbsenSiswa); }
         function attachGuruEventListeners() { if (currentUser.status === 'disetujui') { const btn = document.getElementById('submit-absen-guru-btn'); if (btn) btn.addEventListener('click', handleAbsenGuru); } }
 
-        // --- CRUD & MODAL FUNCTIONS ---
+        // --- ASYNC CRUD & MODAL FUNCTIONS ---
         function openModal(userId = null, role = 'siswa') {
             const modal = document.getElementById('user-modal');
             const title = document.getElementById('modal-title');
@@ -304,63 +307,159 @@
             modal.classList.remove('hidden');
         }
         function closeModal() { document.getElementById('user-modal').classList.add('hidden'); }
-        function handleSaveUser() {
+        async function handleSaveUser() {
+            showSpinner();
             const id = document.getElementById('modal-user-id').value, role = document.getElementById('modal-user-role').value, name = document.getElementById('modal-name').value, username = document.getElementById('modal-username').value, email = document.getElementById('modal-email').value, password = document.getElementById('modal-password').value, kelas = document.getElementById('modal-kelas').value, errorDiv = document.getElementById('modal-error');
-            if (!name || !username || !email) { errorDiv.textContent = "Nama, Username, dan Email wajib diisi."; errorDiv.classList.remove('hidden'); return; }
-            const existingUser = users.find(u => (u.username === username || u.email === email) && u.id != id);
-            if (existingUser) { errorDiv.textContent = "Username atau Email sudah digunakan."; errorDiv.classList.remove('hidden'); return; }
-            if (id) { const userIndex = users.findIndex(u => u.id == id); users[userIndex] = { ...users[userIndex], nama: name, username, email, ...(role === 'siswa' && { kelas }) }; if (password) users[userIndex].password = password; } else { if (!password) { errorDiv.textContent = "Password wajib diisi untuk pengguna baru."; errorDiv.classList.remove('hidden'); return; } const newUser = { id: nextUserId++, nama: name, username, email, password, role, status: role === 'guru' ? 'menunggu persetujuan' : 'aktif', ...(role === 'siswa' && { kelas }) }; users.push(newUser); }
-            saveData();
+            if (!name || !username || !email) { errorDiv.textContent = "Nama, Username, dan Email wajib diisi."; errorDiv.classList.remove('hidden'); hideSpinner(); return; }
+            
+            const { data: existingUser, error: findError } = await supabase.from('user').select('id').or(`username.eq.${username},email.eq.${email}`).not('id', 'eq', id || 0); // Ganti 'users' menjadi 'user'
+            if (findError) { console.error(findError); hideSpinner(); return; }
+            if (existingUser.length > 0) { errorDiv.textContent = "Username atau Email sudah digunakan."; errorDiv.classList.remove('hidden'); hideSpinner(); return; }
+
+            let userData = { nama: name, username, email, role, ...(role === 'siswa' && { kelas }) };
+            if (password) userData.password = password;
+            
+            if (id) {
+                const { error } = await supabase.from('user').update(userData).eq('id', id); // Ganti 'users' menjadi 'user'
+                if (error) { console.error("Update error:", error); hideSpinner(); return; }
+            } else {
+                if (!password) { errorDiv.textContent = "Password wajib diisi untuk pengguna baru."; errorDiv.classList.remove('hidden'); hideSpinner(); return; }
+                userData.status = role === 'guru' ? 'menunggu persetujuan' : 'aktif';
+                const { error } = await supabase.from('user').insert([userData]); // Ganti 'users' menjadi 'user'
+                if (error) { console.error("Insert error:", error); hideSpinner(); return; }
+            }
+            await loadAllData();
             closeModal();
             renderDashboard();
         }
-        function handleDeleteUser(userId) {
+        async function handleDeleteUser(userId) {
             if (window.confirm('Apakah Anda yakin ingin menghapus pengguna ini? Semua data absensi terkait juga akan dihapus.')) {
+                showSpinner();
                 const userToDelete = users.find(u => u.id === userId);
-                if (userToDelete.role === 'guru') { teacherAttendanceRecords = teacherAttendanceRecords.filter(r => r.userId !== userId); } else { attendanceRecords = attendanceRecords.filter(r => r.userId !== userId); }
-                users = users.filter(u => u.id !== userId);
-                saveData();
+                if (userToDelete.role === 'guru') { await supabase.from('teacher_attendance_records').delete().eq('user_id', userId); } 
+                else { await supabase.from('attendance_records').delete().eq('user_id', userId); }
+                await supabase.from('user').delete().eq('id', userId); // Ganti 'users' menjadi 'user'
+                await loadAllData();
                 renderDashboard();
             }
         }
 
-        // --- AUTH & OTHER ACTIONS ---
-        window.handleRegister = () => {
+        // --- ASYNC AUTH & OTHER ACTIONS ---
+        async function handleRegister() {
+            showSpinner();
             const email = document.getElementById('register-email').value, password = document.getElementById('register-password').value, nama = document.getElementById('register-name').value, username = document.getElementById('register-username').value, role = document.getElementById('register-role').value, kelas = document.getElementById('register-kelas').value, registerError = document.getElementById('register-error');
-            if (!email || !password || !nama || !username) { registerError.textContent = "Mohon isi semua field."; registerError.classList.remove('hidden'); return; }
-            if (users.find(u => u.email === email || u.username === username)) { registerError.textContent = "Email atau Username sudah terdaftar."; registerError.classList.remove('hidden'); return; }
-            const newUser = { id: nextUserId++, username, email, password, nama, role, status: role === 'guru' ? 'menunggu persetujuan' : 'aktif', ...(role === 'siswa' && { kelas }) }; users.push(newUser);
-            saveData();
+            if (!email || !password || !nama || !username) { registerError.textContent = "Mohon isi semua field."; registerError.classList.remove('hidden'); hideSpinner(); return; }
+            
+            const { data: existingUser, error: findError } = await supabase.from('user').select('id').or(`username.eq.${username},email.eq.${email}`); // Ganti 'users' menjadi 'user'
+            if (findError) { console.error(findError); hideSpinner(); return; }
+            if (existingUser.length > 0) { registerError.textContent = "Email atau Username sudah terdaftar."; registerError.classList.remove('hidden'); hideSpinner(); return; }
+
+            const newUser = { username, email, password, nama, role, status: role === 'guru' ? 'menunggu persetujuan' : 'aktif', ...(role === 'siswa' && { kelas }) };
+            const { error: insertError } = await supabase.from('user').insert([newUser]); // Ganti 'users' menjadi 'user'
+            if (insertError) { console.error("Register error:", insertError); hideSpinner(); return; }
+            
+            await loadAllData();
+            hideSpinner();
             alert('Registrasi berhasil! Silakan login.'); registerError.classList.add('hidden'); showPage('login-page');
         };
-        window.handleLogin = () => {
+
+        async function handleLogin() {
+            showSpinner();
             const username = document.getElementById('login-username').value, password = document.getElementById('login-password').value, loginError = document.getElementById('login-error');
-            const user = users.find(u => u.username === username && u.password === password);
-            if (user) { currentUser = user; loginError.classList.add('hidden'); showPage('dashboard-page'); renderDashboard(); } else { loginError.textContent = "Username atau password salah."; loginError.classList.remove('hidden'); }
+            
+            if (!supabase) {
+                loginError.textContent = "Koneksi Supabase Gagal. Periksa konfigurasi.";
+                loginError.classList.remove('hidden');
+                hideSpinner();
+                return;
+            }
+
+            // WARNING: Storing and checking plain text passwords is not secure for production.
+            // Use Supabase Auth for a real application. This is for simplicity in this context.
+            const { data, error } = await supabase.from('user').select('*').eq('username', username).eq('password', password).single(); // Ganti 'users' menjadi 'user'
+
+            // --- PERBAIKAN ---
+            // Logika penanganan error yang lebih baik
+            if (error) {
+                console.error("Login error:", error);
+                // Tangani error "Failed to fetch"
+                if (error.message.includes("Failed to fetch")) {
+                    loginError.textContent = "Gagal terhubung ke server. Periksa koneksi/URL Supabase.";
+                } 
+                // Tangani error "Username/password salah" (PGRST116 = tidak ada baris ditemukan)
+                else if (error.code === 'PGRST116') {
+                    loginError.textContent = "Username atau password salah.";
+                } 
+                // Tangani error lain
+                else {
+                    loginError.textContent = "Terjadi kesalahan: " + error.message;
+                }
+                loginError.classList.remove('hidden');
+                hideSpinner();
+                return;
+            }
+            
+            // Jika tidak ada error DAN data ditemukan
+            if (data) { 
+                currentUser = data; 
+                loginError.classList.add('hidden'); 
+                await loadAllData(); 
+                showPage('dashboard-page'); 
+                renderDashboard();
+            } else {
+                // Fallback jika error null tapi data juga null (seharusnya tidak terjadi dengan .single())
+                loginError.textContent = "Username atau password salah."; 
+                loginError.classList.remove('hidden'); 
+                hideSpinner();
+            }
         };
-        window.handleLogout = () => { currentUser = null; showPage('login-page'); };
-        function approveTeacher(uid) { const userIndex = users.findIndex(u => u.id === uid); if (userIndex > -1) { users[userIndex].status = 'disetujui'; saveData(); renderDashboard(); } }
-        function handleAbsenSiswa() {
+
+        function handleLogout() { currentUser = null; showPage('login-page'); };
+
+        async function approveTeacher(uid) { 
+            showSpinner();
+            await supabase.from('user').update({ status: 'disetujui' }).eq('id', uid); // Ganti 'users' menjadi 'user'
+            await loadAllData();
+            renderDashboard();
+        }
+        async function handleAbsenSiswa() {
+            showSpinner();
             const status = document.getElementById('status-absen').value, bukti = document.getElementById('bukti-absen').value;
-            if ((status === 'Izin' || status === 'Sakit') && !bukti) { alert('Mohon sertakan link bukti untuk status Izin atau Sakit.'); return; }
-            attendanceRecords.push({ id: nextAttendanceId++, userId: currentUser.id, tanggal: getTodayDateString(), jam: getCurrentTimeString(), status, bukti, kelas: currentUser.kelas });
-            saveData();
+            if ((status === 'Izin' || status === 'Sakit') && !bukti) { alert('Mohon sertakan link bukti untuk status Izin atau Sakit.'); hideSpinner(); return; }
+            const newRecord = { user_id: currentUser.id, tanggal: getTodayDateString(), jam: getCurrentTimeString(), status, bukti, kelas: currentUser.kelas };
+            await supabase.from('attendance_records').insert([newRecord]);
+            await loadAllData();
             alert('Absensi berhasil disimpan!');
             renderDashboard();
         }
-        function handleAbsenGuru() {
+        async function handleAbsenGuru() {
+            showSpinner();
             const status = document.getElementById('status-absen-guru').value, bukti = document.getElementById('bukti-absen-guru').value;
-            if ((status === 'Izin' || status === 'Sakit') && !bukti) { alert('Mohon sertakan link bukti untuk status Izin atau Sakit.'); return; }
-            teacherAttendanceRecords.push({ id: nextTeacherAttendanceId++, userId: currentUser.id, tanggal: getTodayDateString(), jam: getCurrentTimeString(), status, bukti });
-            saveData();
+            if ((status === 'Izin' || status === 'Sakit') && !bukti) { alert('Mohon sertakan link bukti untuk status Izin atau Sakit.'); hideSpinner(); return; }
+            const newRecord = { user_id: currentUser.id, tanggal: getTodayDateString(), jam: getCurrentTimeString(), status, bukti };
+            await supabase.from('teacher_attendance_records').insert([newRecord]);
+            await loadAllData();
             alert('Absensi berhasil disimpan!');
             renderDashboard();
         }
 
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => { 
-            loadData();
-            showPage('login-page'); 
+            if (!supabase) {
+                // Pesan error sudah ditampilkan oleh block 'catch' di atas.
+                // Kita hanya perlu memastikan spinner disembunyikan.
+                hideSpinner();
+                // Tampilkan halaman login-nya, tapi error akan terlihat di atasnya.
+                showPage('login-page');
+                const loginError = document.getElementById('login-error');
+                if (loginError && !loginError.textContent) {
+                    loginError.textContent = "Konfigurasi Supabase Gagal! Periksa konsol (F12) untuk detail.";
+                    loginError.classList.remove('hidden');
+                }
+            } else {
+                hideSpinner();
+                showPage('login-page'); 
+            }
         });
     </script>
 </body>
